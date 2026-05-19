@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sleeper School — Station Press Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #111009;
+    --bg-mid: #1a1710;
+    --bg-light: #232018;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,200,100,0.2);
+    --text: #e8e2d4;
+    --text-muted: #8a8470;
+    --text-dim: #504e42;
+    --orange: #d4820a;
+    --orange-light: #e8a030;
+    --orange-dim: rgba(212,130,10,0.15);
+    --orange-accent: rgba(212,130,10,0.08);
+    --red: #c0392b;
+    --white: #f5f0e8;
+    --signal: #e8c84a;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at 50% 0%, rgba(60,40,10,0.4) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 90%, rgba(30,15,5,0.5) 0%, transparent 55%);
+  }
+
+  #game-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+    position: relative;
+  }
+
+  .game-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .imprint {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+  }
+
+  .game-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  .game-title .accent {
+    color: var(--orange-light);
+  }
+
+  .game-subtitle {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+  }
+
+  /* Rule banner */
+  .rule-banner {
+    display: none;
+    background: var(--orange-accent);
+    border: 1px solid rgba(212,130,10,0.25);
+    padding: 0.6rem 1rem;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: var(--orange-light);
+    letter-spacing: 0.05em;
+  }
+
+  .rule-banner.visible { display: block; }
+
+  .scene { display: none; animation: fadeIn 0.65s ease forwards; }
+  .scene.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .scene-text { margin-bottom: 2.5rem; }
+
+  .scene-text p {
+    margin-bottom: 1.25em;
+    font-weight: 300;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  .scene-text p:last-child { margin-bottom: 0; }
+  .scene-text em { font-style: italic; color: var(--white); }
+  .scene-text strong { font-weight: 600; color: var(--white); }
+
+  .dialogue {
+    border-left: 2px solid var(--orange);
+    padding: 0.75rem 1.25rem;
+    margin: 1.75rem 0;
+    background: var(--orange-accent);
+  }
+
+  .dialogue p {
+    font-style: italic;
+    color: #d4b87a !important;
+    font-size: 0.95rem !important;
+    margin-bottom: 0.5em !important;
+  }
+
+  .dialogue p:last-child { margin-bottom: 0 !important; }
+
+  .chapter-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .chapter-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .choices {
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+  }
+
+  .choices-prompt {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+
+  .choice-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    text-align: left;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--orange);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+    transform-origin: bottom;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--border-hover);
+    background: var(--orange-accent);
+    color: var(--white);
+    padding-left: 1.6rem;
+  }
+
+  .choice-btn:hover::before { transform: scaleY(1); }
+
+  .choice-btn .choice-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--orange-light);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .choice-btn .choice-text {
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* Bad end button — slightly muted orange */
+  .choice-btn.bad-end { border-color: rgba(180,120,20,0.15); }
+  .choice-btn.bad-end .choice-label { color: #a07830; }
+  .choice-btn.bad-end:hover { border-color: rgba(180,120,20,0.3); background: rgba(180,120,20,0.05); }
+  .choice-btn.bad-end::before { background: #a07830; }
+
+  /* Signup section */
+  .signup-section {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    border: 1px solid rgba(232,200,74,0.25);
+    background: rgba(232,200,74,0.04);
+    text-align: center;
+  }
+
+  .signup-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: 0.75rem;
+  }
+
+  .signup-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+
+  .signup-body {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .signup-btn {
+    display: inline-block;
+    background: var(--signal);
+    color: #1a1400;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 2.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .signup-btn:hover { background: #f0d455; transform: translateY(-1px); }
+
+  .restart-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0.5rem;
+  }
+
+  .restart-btn:hover { color: var(--text-muted); }
+
+  .progress {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 2.5rem;
+  }
+
+  .progress-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border-hover);
+    transition: background 0.3s;
+  }
+
+  .progress-dot.visited { background: #a07830; }
+  .progress-dot.current { background: var(--orange-light); }
+
+  .game-footer {
+    text-align: center;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* Flicker effect for sleep bad endings */
+  @keyframes flicker {
+    0%,100% { opacity: 1; }
+    20% { opacity: 0.4; }
+    40% { opacity: 0.9; }
+    60% { opacity: 0.2; }
+    80% { opacity: 0.8; }
+  }
+
+  .flicker { animation: flicker 1.4s ease forwards; }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <header class="game-header">
+    <div class="imprint">Station Press Arcade</div>
+    <h1 class="game-title"><span class="accent">Sleeper</span> School</h1>
+    <div class="game-subtitle">A story from Don't Let Them</div>
+  </header>
+
+  <div class="rule-banner" id="rule-banner">
+    Rule #1: Don't get touched.
+  </div>
+
+  <div class="progress">
+    <div class="progress-dot current" id="dot-0"></div>
+    <div class="progress-dot" id="dot-1"></div>
+    <div class="progress-dot" id="dot-2"></div>
+    <div class="progress-dot" id="dot-3"></div>
+  </div>
+
+  <!-- SCENE 0: Opening -->
+  <div class="scene active" id="scene-0">
+    <div class="chapter-label">Shiremanstown, PA — 3rd Period Science</div>
+    <div class="scene-text">
+      <p>You were counting down the minutes. Something unseen was counting down with you.</p>
+      <p>The room smelled like formaldehyde had replaced the air itself. Outside, your hometown sat calm and ordinary under the late-afternoon sun. Everything was normal. Boring. Until it wasn't.</p>
+      <p>Principal Wilson stumbled through the door mid-lesson. Professionally dressed, staggering like he'd had a very bad afternoon. A weird symbol marked his forehead. His eyes were open but vacant—awareness drained clean out of them.</p>
+      <p>Mrs. Phillips stepped toward him. "Mr. Wilson?" His hand bumped hers. She went down behind her desk with a dull thud.</p>
+      <p>The room froze. Then the chain reaction started. One by one, the moment anyone touched Wilson—or each other—they folded. Like marionettes with their strings cut. The classroom floor was filling up with warm bodies.</p>
+      <p><em>You told yourself they were still warm. Like that helped.</em></p>
+      <p>You pushed back from your table. The door was blocked—a pile of collapsed students between you and the hallway. Across the room, Taylor's green eyes found yours. She looked like she wanted to ask you something, then remembered just in time that she hated you.</p>
+      <p>A ceiling tile crashed down between you, exploding into white dust.</p>
+      <p>The ones on the floor were starting to stir.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">How do you get out?</div>
+      <button class="choice-btn" onclick="goTo('scene-1a')">
+        <span class="choice-label">The window</span>
+        <span class="choice-text">Second floor, but there's a single-story roof below with an A/C unit. It looks survivable. You yank the window handle.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-1b')">
+        <span class="choice-label">Push through the door</span>
+        <span class="choice-text">The pile isn't that deep. If you move fast enough, you can step over them without contact. Maybe.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-0')">
+        <span class="choice-label">Help the person next to you</span>
+        <span class="choice-text">They just collapsed. You reach out—it's instinct. You can't just leave them there.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-0: Helped someone -->
+  <div class="scene" id="scene-bad-0">
+    <div class="chapter-label">A Natural Reaction</div>
+    <div class="scene-text">
+      <p>Their hand was right there. You grabbed it.</p>
+      <p>The cold hit first—not like cold air, like cold water, like something reaching up through your fingers and pulling down. The classroom tilted. Your knees went soft.</p>
+      <p><em>Oh,</em> you thought. <em>So that's how it works.</em></p>
+      <p>The floor came up fast. It wasn't painful exactly—more like the moment before sleep when your body decides it's done negotiating. You heard Taylor shout your name from somewhere very far away.</p>
+      <p>Then nothing.</p>
+      <p>Just warmth, and quiet, and the faint smell of formaldehyde.</p>
+      <p>And somewhere in the dark behind your eyes, something that wasn't you started to wake up.</p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">Rule #1: Don't get touched.</div>
+      <div class="signup-headline">You broke rule #1.</div>
+      <div class="signup-body">Ford figured out the rules the hard way too. Don't Let Them is coming—be first to know when it does.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Try again (don't touch anything)</button>
+    </div>
+  </div>
+
+  <!-- SCENE 1A: Window -->
+  <div class="scene" id="scene-1a">
+    <div class="chapter-label">The Window</div>
+    <div class="scene-text">
+      <p>The window handle wouldn't budge. You strained harder. Behind you, the stirring bodies were finding their feet, arms outstretching, eyes glassy and wrong.</p>
+      <p>The latch snapped open. Cold air punched through like it had been waiting all day. Blinds cracked against the glass in rhythm with your heartbeat.</p>
+      <p>The frame stuck halfway. You shoved. Wood groaned, paint flakes rained on your sleeve. Outside, the wind screamed through the gap—damp concrete and winter grass.</p>
+      <p>Taylor scrambled across the lab tables toward you, boots clattering on black tabletops, narrowly dodging a hand that swiped at her.</p>
+      <p>"It looks a little far," she said, peering down at the roof below.</p>
+      <p><em>Really, Taylor? Now's the time for math homework?</em></p>
+      <p>"You'll survive," you said, and hoisted yourself up.</p>
+      <p>Your landing sent a dull thunk through the air. You wobbled, pushed your glasses up, and gave an exaggerated bow up at Taylor. You couldn't help yourself.</p>
+      <p>Her pale face hovered in the window. Brown ponytail whipping in the wind. Behind her, fingers brushed the air inches from her backpack.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">She's about to jump. Do you help?</div>
+      <button class="choice-btn" onclick="goTo('scene-2a'); showRule();">
+        <span class="choice-label">Step back and let her land</span>
+        <span class="choice-text">She doesn't need your help. She made that clear. You give her space and she drops lightly beside you—smug about the landing, naturally.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-2b'); showRule();">
+        <span class="choice-label">Go without her</span>
+        <span class="choice-text">Every second on this roof is a second wasted. You turn toward the edge. She can follow or she can't.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-1a')">
+        <span class="choice-label">Reach up to catch her</span>
+        <span class="choice-text">She's going to land hard. You reach up to steady her. Skin contact. Immediate. Oh no.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-1A: Caught Taylor -->
+  <div class="scene" id="scene-bad-1a">
+    <div class="chapter-label">A Gentlemanly Mistake</div>
+    <div class="scene-text">
+      <p>Her hands found your shoulders as she landed. Bare skin against bare skin, just above your collar.</p>
+      <p>She went rigid first—eyes wide, a sharp intake of breath—and then her weight became dead weight, and you went down together onto the rooftop gravel, her unconscious and you following half a second behind.</p>
+      <p>The cold tar pressed into your cheek.</p>
+      <p>From somewhere above, you heard the classroom window creak in the wind.</p>
+      <p>From somewhere inside you, something stirred that wasn't entirely yours.</p>
+      <p><em>You should have let her land on her own. She was always going to land on her own.</em></p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">Rule #1: Don't get touched.</div>
+      <div class="signup-headline">Even accidentally.</div>
+      <div class="signup-body">Ford and Taylor have a complicated history. Don't Let Them makes it more complicated. Be first to know when it's coming.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Try again</button>
+    </div>
+  </div>
+
+  <!-- SCENE 1B: Door -->
+  <div class="scene" id="scene-1b">
+    <div class="chapter-label">The Door</div>
+    <div class="scene-text">
+      <p>You mapped it in your head: step left of Martinez, right of the two freshmen, don't clip the backpack on the floor. Six feet of human obstacle course and then the hallway.</p>
+      <p>You made it four feet.</p>
+      <p>The problem wasn't the ones on the floor. It was the ones getting back up. Wilson's hand closed around your ankle from behind a toppled stool—ice cold, impossibly strong. The cold crawled up your leg like current, pulling your strength down with it.</p>
+      <p>Your eyelids hit a hundred pounds each.</p>
+      <p><em>Not like this,</em> you thought. <em>Not on the science room floor.</em></p>
+      <p>Then someone yanked your hood hard enough to choke you, and the grip broke. Taylor. Standing over you, looking furious—which was, somehow, reassuring.</p>
+      <p>"Window," she said. "Now."</p>
+      <p>You didn't argue.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">You're back at the window. What now?</div>
+      <button class="choice-btn" onclick="goTo('scene-2a'); showRule();">
+        <span class="choice-label">Jump first, move fast</span>
+        <span class="choice-text">You go out the window, land on the lower roof, and keep moving. Taylor follows on her own terms. It's fine. It's fine.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-2b'); showRule();">
+        <span class="choice-label">Wait and plan a route down</span>
+        <span class="choice-text">The parking lot is right below. If you can see what's out there before you drop, you can pick a direction that doesn't end badly.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-1b')">
+        <span class="choice-label">Go back for your coat</span>
+        <span class="choice-text">Your locker is literally around the corner. This is Pennsylvania in winter. It'll take thirty seconds.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-1B: Went for coat -->
+  <div class="scene" id="scene-bad-1b">
+    <div class="chapter-label">Thirty Seconds</div>
+    <div class="scene-text">
+      <p>Thirty seconds. That was all.</p>
+      <p>Your locker combination took two tries because your hands were shaking. Twelve seconds. The coat was jammed behind your gym bag. Eight more. You yanked it free.</p>
+      <p>When you turned around, the hallway was full.</p>
+      <p>Not a few stragglers. Full. A slow tide of blank-faced students and faculty moving in your direction with the collective purpose of something that doesn't need to hurry because it already knows where you're going.</p>
+      <p>You looked at your coat.</p>
+      <p>You looked at the hallway.</p>
+      <p><em>It was a nice coat.</em></p>
+      <p>You dropped it and ran. You didn't make it far.</p>
+      <p>The coat was still there the next morning, folded neatly over the handle of your locker.</p>
+      <p>You were not.</p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">The coat wasn't worth it.</div>
+      <div class="signup-headline">Ford left his coat too.</div>
+      <div class="signup-body">Some things you leave behind. Don't Let Them is coming—find out what Ford had to leave behind to get out.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Try again (leave the coat)</button>
+    </div>
+  </div>
+
+  <!-- SCENE 2A: Together, reach the bus -->
+  <div class="scene" id="scene-2a">
+    <div class="chapter-label">The Parking Lot</div>
+    <div class="scene-text">
+      <p>The parking lot was chaos. Empty cars at odd angles, doors yawning open. People staggered between the vehicles—arms out, faces blank. You knew them. Mrs. Schaefer from the library, still clutching her keys. Danny Wu from soccer, jersey torn.</p>
+      <p>Then you spotted the bus. A driver—short, curly-haired, half a cigarette in her mouth—was waving survivors toward it. There weren't many. The bus sat nose-pointed at the street with an open path to anywhere else.</p>
+      <p>"Get on, we gotta go!" she shouted.</p>
+      <p>You climbed the steps. Sank into a green bench seat at the back. The bus smelled of vinyl and nicotine. Outside the window, the disorder felt like it was happening to someone else. You were almost safe. Removed.</p>
+      <p>Taylor sat a few rows ahead. She seemed relieved not to be stuck with you. The feeling was mutual.</p>
+      <p>The driver—Becky—had gathered six students. She was scanning for more when a shadow passed over the roof. Wide and impossible. The bus groaned.</p>
+      <p>The smallest kid on the bus stood up. A middle schooler. His eyes looked like smoke was forming inside them. A symbol appeared on his forehead—the same one Wilson had. His hand reached for the girl beside him. She went limp.</p>
+      <p>Becky unbuckled and rushed forward. The moment she touched him, she went down too.</p>
+      <p><em>Here we go again.</em></p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">What do you do?</div>
+      <button class="choice-btn" onclick="goTo('scene-3a')">
+        <span class="choice-label">Pull the emergency exit</span>
+        <span class="choice-text">The red handle is right behind you. The alarm will scream. The fallen will rise. But the door will open.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-3b')">
+        <span class="choice-label">Get to the driver's seat</span>
+        <span class="choice-text">Becky's down but the engine's still running. The street ahead is clear. Somebody has to drive this thing.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-2a')">
+        <span class="choice-label">Restrain the kid yourself</span>
+        <span class="choice-text">He's small. You're bigger. If you can pin his arms without skin contact, you can stop this spreading. Probably.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE 2B: Went alone, regretted it -->
+  <div class="scene" id="scene-2b">
+    <div class="chapter-label">Alone</div>
+    <div class="scene-text">
+      <p>You moved fast across the rooftop, dropped to the sidewalk, and cut toward the street before any of the shuffling shapes in the parking lot could clock you.</p>
+      <p>It felt smart. For about two blocks.</p>
+      <p>Then the adrenaline thinned out, and you became aware of how quiet it was. Your sneakers on the pavement. Your breath. Nothing else. Every house shut. Every storefront dark.</p>
+      <p>You saw an elderly couple shuffle off a porch ahead—same blank eyes, same outstretched arms, same mark on one forehead. You dodged them. Cut toward Main Street. Okay. Fine. You could handle three.</p>
+      <p>Then there were more. Coming from a side street. From a driveway. From a bus stop. Not fast—never fast—but there was no gap in them anymore, just a slow wall of people who used to have names you knew.</p>
+      <p>You backed against a brick wall. Your phone had no signal. The bus you'd ignored was somewhere behind you, already gone.</p>
+      <div class="dialogue">
+        <p>"You do you," you'd said.</p>
+        <p>Great plan, Ford.</p>
+      </div>
+      <p>Then you heard it—a voice, hissing from the shrubs by the south entrance of the school.</p>
+      <p>"Truck!"</p>
+      <p>Taylor. Crouched by the hedges. Glaring at you with an expression that managed to be both furious and relieved.</p>
+      <p>You had never been so glad to be annoyed at someone in your life.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">She's heading back inside. Do you follow?</div>
+      <button class="choice-btn" onclick="goTo('scene-3b')">
+        <span class="choice-label">Follow her in</span>
+        <span class="choice-text">The doors are unlocked. It's dark. It smells like crayons and dust. But it's better than the street right now—probably.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-3a')">
+        <span class="choice-label">Find another way</span>
+        <span class="choice-text">You're not going back in that building. There has to be a gap in the crowd somewhere. You scan for a route.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-2b')">
+        <span class="choice-label">Call her name back</span>
+        <span class="choice-text">"Taylor!" You say it before you think. Loud enough for every head in the street to swivel your direction at once.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-2A: Tried to restrain the kid -->
+  <div class="scene" id="scene-bad-2a">
+    <div class="chapter-label">Probably</div>
+    <div class="scene-text">
+      <p>You grabbed his wrists from behind. Jacket sleeves between your palms and his skin. Good. Smart. You had this.</p>
+      <p>He twisted with a strength that had no business being in a twelve-year-old and got one hand free. His fingers found the inside of your wrist where your sleeve had ridden up.</p>
+      <p>The cold hit like a switch being thrown.</p>
+      <p>You were sitting down. Then you were lying down. The bus ceiling swam above you, fluorescent and flickering. Taylor's voice came from far away, sharp and panicked.</p>
+      <p>The last thing you felt before the quiet took you was the bus accelerating—Becky somehow back on her feet, foot on the gas, driving with the particular focus of someone who has decided not to think too hard about anything right now.</p>
+      <p><em>You'd had a good plan.</em></p>
+      <p><em>Probably</em> just wasn't good enough.</p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">Rule #1: Don't get touched.</div>
+      <div class="signup-headline">Probably isn't a rule.</div>
+      <div class="signup-body">Ford learns the rules the hard way. Don't Let Them is coming—be first to know when it arrives.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Try again</button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-2B: Called her name -->
+  <div class="scene" id="scene-bad-2b">
+    <div class="chapter-label">Every Head on the Street</div>
+    <div class="scene-text">
+      <p>"Taylor!"</p>
+      <p>The word left your mouth before your brain could vote on it.</p>
+      <p>The silence that followed lasted exactly one second. Then every sleeper within two blocks turned toward the sound with the slow, synchronized precision of something that had been waiting for a noise to aim at.</p>
+      <p>Taylor appeared at the school door, stared at you, stared at the street, and mouthed something that was almost certainly not a compliment.</p>
+      <p>She vanished inside.</p>
+      <p>You ran. You were fast. You'd always been faster than people expected. But the crowd was everywhere now—closing from both sides, from the parking lot, from the crosswalk. Every gap you aimed for filled before you reached it.</p>
+      <p>The last gap closed somewhere near the bike rack.</p>
+      <p>Your bike was right there, too. You'd noticed that. For what it was worth.</p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">Silence is rule #2.</div>
+      <div class="signup-headline">Ford had more rules to learn.</div>
+      <div class="signup-body">Don't Let Them is coming. Find out all the rules before it's too late.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Try again (quietly)</button>
+    </div>
+  </div>
+
+  <!-- SCENE 3A: Out and running -->
+  <div class="scene" id="scene-3a">
+    <div class="chapter-label">The Street</div>
+    <div class="scene-text">
+      <p>You hit the pavement running and didn't stop. Taylor was beside you—or close enough. The cold bit straight through your shirt. Your lungs begged. None of it mattered.</p>
+      <p>Two blocks from the school, you cut through a narrow alleyway that opened into a backyard dominated by a massive tree. You skidded to a halt. Taylor nearly ran into you.</p>
+      <p>Two freshmen boys—twins by the look of them, same face, same matching coats—were already there, already climbing. One looked down.</p>
+      <p>"Up here," the shorter one said. Not a suggestion.</p>
+      <p>Taylor looked at the treehouse—weathered wood, uneven ladder, the whole thing creaking in the wind—and then looked at the alley behind you, where shapes were beginning to appear.</p>
+      <p>She climbed. Fast and focused. Deb—a girl from your class you hadn't even noticed until now—scrambled up behind her, muttering a prayer.</p>
+      <p>You went last. Arms shaking with every rung. Below, a sleeper groaned, drawn by the noise. An icy hand grazed your shoe. You kicked. Kept climbing.</p>
+      <p>At the top, the hatch sealed shut behind you. The taller brother weighted it down with an old toolbox.</p>
+      <p>Five of you. A treehouse barely big enough for three. Somewhere below, the groaning continued—patient, unhurried. Through the gaps in the wood, you could see the street beginning to fill.</p>
+      <div class="dialogue">
+        <p>"This place feels wrong when it's empty," Deb muttered.</p>
+        <p>"Understatement," you said.</p>
+      </div>
+      <p>In the corner, half-buried under boxes, sat a Ouija board and a camcorder with a cracked screen.</p>
+      <p>You didn't know these guys. But this didn't look like normal kid stuff.</p>
+      <p><em>Nothing about today looked like normal kid stuff.</em></p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">Coming soon from Station Press</div>
+      <div class="signup-headline">Don't Let Them</div>
+      <div class="signup-body">Ford, Taylor, Deb, and two brothers you don't know yet are trapped in a treehouse above a town that's gone to sleep. The real story starts here. Be first to know when it arrives.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me When It's Ready</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE 3B: Back inside the school -->
+  <div class="scene" id="scene-3b">
+    <div class="chapter-label">Back Inside</div>
+    <div class="scene-text">
+      <p>The south entrance was unlocked. Inside, the hallway was dim—red lockers, white cinder block, no windows. With the lights out, it was gloomier than it had any right to be at this hour.</p>
+      <p>You tripped on something sticky and black on the floor. It clung to your hands when you tried to wipe it off.</p>
+      <p>"Gross," you said.</p>
+      <p>Then a third voice came from the dark. Nervous. Brittle.</p>
+      <p>"Guys?"</p>
+      <p>A girl in a green puff coat stepped into the dim light. Braces catching the faint glow. You knew her—Deb. Cordial. A few group projects. Different circles, yours being mostly none.</p>
+      <p>"I didn't see much," she said, words rushing out. "We were at P.E. A parent touched someone's neck. He collapsed. Then he got back up and he was—like them. I ran to the locker room. After the lights went out I couldn't stay."</p>
+      <p>The three of you stood in the dark while the glass doors rattled at the end of the hall.</p>
+      <p>"It's like they're sleepwalking," Taylor said. "But contagious."</p>
+      <p>You raised one finger in the air. "Rule number one—"</p>
+      <p>"I'll be making the rules," Taylor said flatly. "Rule number one: don't get touched."</p>
+      <p>She basically plagiarized.</p>
+      <p>A loud bang echoed from deeper in the school. Then the double doors at the end of the corridor swung open—a teacher, arms outstretched, moving into the hall with the others pushing in behind.</p>
+      <p>Deb was already moving. "Follow me. I know another way out."</p>
+    </div>
+    <div class="signup-section">
+      <div class="signup-eyebrow">Coming soon from Station Press</div>
+      <div class="signup-headline">Don't Let Them</div>
+      <div class="signup-body">Ford, Taylor, and Deb have one rule and no plan. The real story is coming. Be first to know when it arrives.</div>
+      <a class="signup-btn" href="https://mailchi.mp/8a149baa856e/dont-let-them-interest-sign-up" target="_blank">Notify Me When It's Ready</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <footer class="game-footer">
+    Station Press &nbsp;·&nbsp; stationpressbooks.com
+  </footer>
+
+</div>
+
+<script>
+  const visited = new Set([0]);
+  const sceneOrder = {
+    'scene-0': 0,
+    'scene-1a': 1, 'scene-1b': 1,
+    'scene-bad-0': 1,
+    'scene-2a': 2, 'scene-2b': 2,
+    'scene-bad-1a': 2, 'scene-bad-1b': 2,
+    'scene-3a': 3, 'scene-3b': 3,
+    'scene-bad-2a': 3, 'scene-bad-2b': 3,
+  };
+
+  function showRule() {
+    document.getElementById('rule-banner').classList.add('visible');
+  }
+
+  function goTo(sceneId) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    const next = document.getElementById(sceneId);
+    next.classList.add('active');
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const dotIndex = sceneOrder[sceneId];
+    visited.add(dotIndex);
+    updateDots(dotIndex);
+  }
+
+  function updateDots(current) {
+    for (let i = 0; i <= 3; i++) {
+      const dot = document.getElementById('dot-' + i);
+      if (!dot) continue;
+      dot.className = 'progress-dot';
+      if (i < current && visited.has(i)) dot.classList.add('visited');
+      else if (i === current) dot.classList.add('current');
+    }
+  }
+
+  function restart() {
+    visited.clear();
+    visited.add(0);
+    document.getElementById('rule-banner').classList.remove('visible');
+    goTo('scene-0');
+    updateDots(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
