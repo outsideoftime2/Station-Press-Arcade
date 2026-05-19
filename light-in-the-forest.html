@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Light in the Forest—Station Press Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #0d1117;
+    --navy-mid: #161c27;
+    --navy-light: #1e2535;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.18);
+    --text: #e8e4dc;
+    --text-muted: #8a8a7a;
+    --text-dim: #555550;
+    --green: #7ec850;
+    --green-dark: #5a9b35;
+    --amber: #c8922a;
+    --white: #f5f1eb;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(30,50,20,0.35) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(10,20,35,0.6) 0%, transparent 60%);
+  }
+
+  #game-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+    position: relative;
+  }
+
+  /* Header */
+  .game-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .imprint {
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+  }
+
+  .game-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  .game-title .light-word {
+    color: var(--green);
+  }
+
+  .game-subtitle {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+  }
+
+  /* Scene container */
+  .scene {
+    display: none;
+    animation: fadeIn 0.7s ease forwards;
+  }
+
+  .scene.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scene text */
+  .scene-text {
+    margin-bottom: 2.5rem;
+  }
+
+  .scene-text p {
+    margin-bottom: 1.25em;
+    font-weight: 300;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  .scene-text p:last-child {
+    margin-bottom: 0;
+  }
+
+  .scene-text em {
+    font-style: italic;
+    color: var(--white);
+  }
+
+  .scene-text strong {
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  /* Atmosphere callout */
+  .atmosphere {
+    border-left: 2px solid var(--green-dark);
+    padding: 0.75rem 1.25rem;
+    margin: 1.75rem 0;
+    background: rgba(94, 160, 50, 0.06);
+  }
+
+  .atmosphere p {
+    font-style: italic;
+    color: #a8c890 !important;
+    font-size: 0.95rem !important;
+    margin: 0 !important;
+  }
+
+  /* Chapter label */
+  .chapter-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .chapter-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Choice section */
+  .choices {
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+  }
+
+  .choices-prompt {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+
+  .choice-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    text-align: left;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--green);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+    transform-origin: bottom;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--border-hover);
+    background: rgba(255,255,255,0.03);
+    color: var(--white);
+    padding-left: 1.6rem;
+  }
+
+  .choice-btn:hover::before {
+    transform: scaleY(1);
+  }
+
+  .choice-btn .choice-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .choice-btn .choice-text {
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* Buy section */
+  .buy-section {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    border: 1px solid rgba(200, 146, 42, 0.3);
+    background: rgba(200, 146, 42, 0.05);
+    text-align: center;
+  }
+
+  .buy-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 0.75rem;
+  }
+
+  .buy-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    font-style: italic;
+  }
+
+  .buy-body {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .buy-btn {
+    display: inline-block;
+    background: var(--amber);
+    color: #1a0f00;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 2.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+  }
+
+  .buy-btn:hover {
+    background: #daa030;
+    transform: translateY(-1px);
+  }
+
+  .restart-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0.5rem;
+  }
+
+  .restart-btn:hover { color: var(--text-muted); }
+
+  .choice-btn.bad-end {
+    border-color: rgba(90, 155, 53, 0.2);
+  }
+
+  .choice-btn.bad-end .choice-label {
+    color: #5a8a3a;
+  }
+
+  .choice-btn.bad-end:hover {
+    border-color: rgba(90, 155, 53, 0.4);
+    background: rgba(90, 155, 53, 0.04);
+  }
+
+  .choice-btn.bad-end::before {
+    background: #5a8a3a;
+  }
+
+  /* Progress dots */
+  .progress {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 2.5rem;
+  }
+
+  .progress-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-hover);
+    transition: background 0.3s;
+  }
+
+  .progress-dot.visited {
+    background: var(--green-dark);
+  }
+
+  .progress-dot.current {
+    background: var(--green);
+  }
+
+  /* Footer */
+  .game-footer {
+    text-align: center;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* Orb effect */
+  .orb-pulse {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,220,0.9);
+    box-shadow: 0 0 8px 3px rgba(255,255,200,0.4);
+    animation: orbPulse 2.8s ease-in-out infinite;
+    vertical-align: middle;
+    margin: 0 4px;
+  }
+
+  @keyframes orbPulse {
+    0%, 100% { opacity: 0.6; box-shadow: 0 0 6px 2px rgba(255,255,200,0.3); }
+    50% { opacity: 1; box-shadow: 0 0 14px 5px rgba(255,255,200,0.6); }
+  }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <header class="game-header">
+    <div class="imprint">Station Press Arcade</div>
+    <h1 class="game-title">The <span class="light-word">Light</span> in<br>the Forest</h1>
+    <div class="game-subtitle">A story from The Wrong Clearing</div>
+  </header>
+
+  <div class="progress" id="progress-bar">
+    <div class="progress-dot current" id="dot-0"></div>
+    <div class="progress-dot" id="dot-1"></div>
+    <div class="progress-dot" id="dot-2"></div>
+    <div class="progress-dot" id="dot-3"></div>
+  </div>
+
+  <!-- SCENE 0: Opening -->
+  <div class="scene active" id="scene-0">
+    <div class="chapter-label">The Coconino, Night One</div>
+    <div class="scene-text">
+      <p>The fire had been going for a few hours, and you were finally getting somewhere with the story—the one about your great-grandfather, the one that always made you sound just strange enough to be interesting. Jayson and Ava sat across from you. Seth. Marcos. Josie, close enough that you were aware of every small movement she made.</p>
+      <p>You had them. For once, you actually had them.</p>
+      <p>Then Jayson stood. Ava followed. You lost your audience before you reached the good part.</p>
+      <p>You turned to see what they were looking at.</p>
+      <div class="atmosphere">
+        <p>A brilliant white light <span class="orb-pulse"></span> floated between the trees—slow, deliberate. Not a flashlight. Not a beam. It pulsed, inconsistently, as if it had a purpose. The ring of shadow surrounding it seemed to drink in the forest. No crunching pinecones. No footsteps.</p>
+      </div>
+      <p>"What is that?" you muttered.</p>
+      <p>"It's not a flashlight," Ava whispered. "It's moving… up and down."</p>
+      <p>"What if it's the cops?" Marcos whispered.</p>
+      <p>"It's not the cops," you said. "It's coming from the mountain."</p>
+      <p>Jayson cupped his hands and yelled into the dark. The orb kept drifting, kept flickering. Taunting.</p>
+      <p>"Someone should go after it," Seth said, gripping his flashlight.</p>
+      <p>And just like that, the rock-paper-scissors ritual began. Two guys would go. The orb would be nothing—a lost hiker, a lantern, something explainable. You'd laugh about it in ten minutes.</p>
+      <p>You faced off against Jayson. One. Two. Three.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">What do you throw?</div>
+      <button class="choice-btn" onclick="goTo('scene-1a')">
+        <span class="choice-label">Rock</span>
+        <span class="choice-text">You always lead with rock. It wins. You stay behind by the fire while Jayson and Marcos disappear into the trees.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-1b')">
+        <span class="choice-label">Scissors</span>
+        <span class="choice-text">You change it up. You lose. You grab a flashlight and follow Jayson into the dark—leaving Marcos safely behind.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad')">
+        <span class="choice-label">Paper</span>
+        <span class="choice-text">You don't know why. You never throw paper.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE 1A: Stayed behind -->
+  <div class="scene" id="scene-1a">
+    <div class="chapter-label">By the Fire</div>
+    <div class="scene-text">
+      <p>Jayson and Marcos disappeared into the trees, flashlight beams bouncing until the forest swallowed them whole. Ava stood on her toes and kissed Jayson just before he went. Marcos did his little football-hop. They were gone.</p>
+      <p>Josie slipped her arm into yours.</p>
+      <p>Victoria and Seth filled the silence with something stupid—s'mores versus cookies. You were almost grateful for it. Sitting quietly would have let the fear in.</p>
+      <p>You checked your watch. Then checked it again. <em>An hour.</em></p>
+      <p>"Why didn't you go with them?" Ava asked. "You know these woods."</p>
+      <p>You opened your mouth to answer. Then footsteps—fast, stumbling—broke through the treeline.</p>
+      <p>Jayson burst into the clearing, doubled over, gasping.</p>
+      <p><strong>"He's gone,"</strong> he choked out.</p>
+      <p>Ava's hand flew to her mouth. Josie stepped forward. <em>"Where's Marcos?"</em></p>
+      <p>"We were following the orb," Jayson said, still catching his breath. "It had a shape. Like a person. A woman. Marcos ran after her." He shook his head. "I followed, but they both vanished. I couldn't find him anywhere."</p>
+      <p>Panic bled through the group. Your pulse pounded. <em>I should've gone with them.</em></p>
+      <p>The woods waited beyond the firelight. Thick. Quiet. Expectant.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">What do you do?</div>
+      <button class="choice-btn" onclick="goTo('scene-2a')">
+        <span class="choice-label">Go now</span>
+        <span class="choice-text">Seth's already grabbing a flashlight. You're not sitting here while Marcos is out there. You go in.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-2b')">
+        <span class="choice-label">Wait for daybreak</span>
+        <span class="choice-text">Jayson says no one's hurt yet. The dark is too dangerous. You feed the fire and wait—and wait—and listen to every sound the forest makes.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-1a')">
+        <span class="choice-label">Yell his name into the woods</span>
+        <span class="choice-text">Marcos! You cup your hands and shout as loud as you can. The forest goes absolutely silent. Then the orb reappears—closer than before.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-1A: Yelled into the woods -->
+  <div class="scene" id="scene-bad-1a">
+    <div class="chapter-label">A Completely Understandable Mistake</div>
+    <div class="scene-text">
+      <p>"Marcos!" Your voice rang out through the trees—loud, clear, and very, very stupid.</p>
+      <p>The forest went silent. Not quiet. <em>Silent.</em> Every cricket, every rustling branch, every distant hoot of an owl, gone in an instant.</p>
+      <p>Then the orb appeared at the treeline.</p>
+      <p>Not floating in the distance this time. Right there. Twenty feet away. Pulsing slowly, the shadow around it darker than the night behind it, the shape within it unmistakably aware of you.</p>
+      <p>Josie's grip on your arm became a vice.</p>
+      <p>"You just told it where we are," Seth said, very quietly.</p>
+      <p>Nobody argued. Nobody moved.</p>
+      <p>The orb pulsed once. Drifted one step closer.</p>
+      <p>Seth ran. That broke the spell. Everyone ran.</p>
+      <p>You ran last, and you could feel it behind you the whole way to the cars—patient, unhurried, like something that had done this before and already knew how it ended.</p>
+      <p><em>Never announce yourself to things that glow in the dark.</em></p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">In the real story, Isaac stayed quiet.</div>
+      <div class="buy-headline">That didn't help either.</div>
+      <div class="buy-body">The Wrong Clearing doesn't reward caution. Or courage. It just keeps the night going.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE 1B: Went in -->
+  <div class="scene" id="scene-1b">
+    <div class="chapter-label">Into the Dark</div>
+    <div class="scene-text">
+      <p>You and Jayson moved into the trees, flashlight beams cutting thin paths through the dark. Behind you, the firelight shrank to an orange pinprick and then disappeared entirely.</p>
+      <p>The orb floated maybe forty yards ahead. Up close it was different—not a flat disc of light but something with depth. Something with a shape.</p>
+      <p>"Is that—" you started.</p>
+      <p>"Don't," Jayson said.</p>
+      <p>It looked like a woman.</p>
+      <p>Not a silhouette. Not a trick of the light. A figure—pale, translucent—moving through the pines with a purpose that had nothing to do with being seen. She moved deeper. And Jayson's beam followed her.</p>
+      <p><em>Your great-grandfather's warning surfaced in your mind, sharp and sudden: stay away from that forest.</em></p>
+      <p>The figure paused. Turned.</p>
+      <p>And for one terrible second, you thought she was looking at you.</p>
+      <p>Jayson took a step forward.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">What do you do?</div>
+      <button class="choice-btn" onclick="goTo('scene-2c')">
+        <span class="choice-label">Follow her</span>
+        <span class="choice-text">Jayson's already moving. You keep up—deeper into the pines, past the ravine, past the point where you recognize anything at all.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-2d')">
+        <span class="choice-label">Pull Jayson back</span>
+        <span class="choice-text">Something about the way she turned. Something about the dark around her. You grab his arm. "Don't." And you stand there as the light drifts slowly out of sight.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-bad-1b')">
+        <span class="choice-label">Turn your flashlight off</span>
+        <span class="choice-text">If she can't see you, you're safe. That's how this works. That has to be how this works.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD-1B: Turned off flashlight -->
+  <div class="scene" id="scene-bad-1b">
+    <div class="chapter-label">A Deeply Flawed Theory</div>
+    <div class="scene-text">
+      <p>You clicked off your flashlight.</p>
+      <p>Jayson immediately clicked his off too, because apparently that looked like a plan.</p>
+      <p>Darkness. Total, absolute, suffocating darkness. You couldn't see your hand in front of your face. You couldn't see the trees. You couldn't see the figure.</p>
+      <p>You could not, crucially, see where the figure was.</p>
+      <p>Something brushed your shoulder.</p>
+      <p>Not wind. Not a branch. Something deliberate, something that knew exactly where your shoulder was despite the dark, something that—</p>
+      <p>Jayson's flashlight came back on. He was three feet to your left, pointing the beam straight up, face white as paper.</p>
+      <p>"Run," he said.</p>
+      <p>You ran. You both ran. You ran so fast you didn't remember the ravine until you were already across it.</p>
+      <p>You never turned the flashlight off again.</p>
+      <p><em>The dark, it turns out, is not safer just because you can't see what's in it.</em></p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">In the real story, the lights stayed on.</div>
+      <div class="buy-headline">Not that it helped much.</div>
+      <div class="buy-body">The Wrong Clearing sees you whether you're looking or not.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE 2A: Searched immediately -->
+  <div class="scene" id="scene-2a">
+    <div class="chapter-label">The Search</div>
+    <div class="scene-text">
+      <p>Seth handed Jayson's Maglite to you and switched on his own. Josie grabbed it right back out of your hand. "I'm coming too," she said. No argument.</p>
+      <p>For hours, your beams carved weak paths through the dark. The forest gave you nothing. No footprints. No broken branches. No sign that Marcos had ever been here at all—except that he had been, and now he wasn't.</p>
+      <p>You crossed what was supposed to be the old Hopi trail twice. Seth, who'd been swaggering at the start, went quiet. Josie stayed close.</p>
+      <div class="atmosphere">
+        <p>The silence out here wasn't peaceful. It was thick and suffocating, the kind that pressed in from all sides—the kind that felt deliberate, like the forest was holding its breath.</p>
+      </div>
+      <p>You trudged back to camp with nothing. Heads low. The fire had burned down to weak flickers.</p>
+      <p><em>I brought them here.</em> The thought sat on your chest like a stone. <em>If anything happened to Marcos, that's on me.</em></p>
+      <p>But Marcos wasn't back. And the forest wasn't giving answers.</p>
+      <p>You fed another branch into the fire and stared at the treeline. Whatever was out there—whatever had taken him—it knew these woods better than you did.</p>
+      <p>And somewhere in the dark beyond the firelight, the orb was still moving.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know what the forest wanted?</div>
+      <div class="buy-headline">The Wrong Clearing</div>
+      <div class="buy-body">Isaac's story—the one that started with a camping trip he was warned to avoid—is already written. The real answers are waiting.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE 2B: Waited -->
+  <div class="scene" id="scene-2b">
+    <div class="chapter-label">The Longest Night</div>
+    <div class="scene-text">
+      <p>Nobody slept. You fed the fire branch after branch, burning tomorrow's wood, burning anything to keep the light going. Somewhere in the tent, you could hear the girls crying quietly under a blanket.</p>
+      <p>"We should call the police," Ava said softly.</p>
+      <p>"We can't," Seth snapped. "We're out here illegally."</p>
+      <p>The argument went in circles. Jayson paced. The fire sputtered. And the forest pressed close—shadows twisting at the edge of the light, belonging to something you couldn't name.</p>
+      <p>You watched the treeline until your eyes burned.</p>
+      <p>Marcos had to be okay. He had to.</p>
+      <div class="atmosphere">
+        <p>But the forest didn't answer. It never answered. It only waited—the way something waits when it already knows how the night ends.</p>
+      </div>
+      <p>By the time grey light started bleeding into the sky, you hadn't moved. The fire was nearly dead. And Marcos still hadn't come back.</p>
+      <p>Whatever was out there had wanted him specifically. You didn't know how you knew that. You just did.</p>
+      <p>And it had been watching the rest of you all night.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know what the forest wanted?</div>
+      <div class="buy-headline">The Wrong Clearing</div>
+      <div class="buy-body">Isaac's story—the one that started with a camping trip he was warned to avoid—is already written. The real answers are waiting.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE 2C: Followed her -->
+  <div class="scene" id="scene-2c">
+    <div class="chapter-label">Past the Ravine</div>
+    <div class="scene-text">
+      <p>You ran. Both of you. The figure moved fast—impossibly fast—and the forest blurred past, branches catching your jacket, the ground uneven and treacherous in the dark. The orb flickered ahead like a pale lantern. Like a dare.</p>
+      <p>Past the ravine. Past any landmark you recognized.</p>
+      <p>Then—nothing. The light went out. The forest went completely silent.</p>
+      <p>You stopped. Jayson stopped beside you, breathing hard. Your flashlight swept left, right, up—pine trunks and darkness and more pine trunks, identical in every direction.</p>
+      <p><em>Where were you?</em></p>
+      <p>You turned around. The path you'd come from was gone—not obscured, not dark. <em>Gone.</em> As if the forest had closed behind you like a door.</p>
+      <div class="atmosphere">
+        <p>A brilliant white light pulsed—behind you now. Slow and deliberate. Moving up and down, the way Ava had described it. The way it had moved at the start.</p>
+      </div>
+      <p>It had led you here on purpose.</p>
+      <p>Your great-grandfather's voice was very loud in your head now.</p>
+      <p>You should have listened before you came to this forest. You really, truly should have.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know what the forest wanted?</div>
+      <div class="buy-headline">The Wrong Clearing</div>
+      <div class="buy-body">Isaac's story—the one that started with a camping trip he was warned to avoid—is already written. The real answers are waiting.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE 2D: Pulled back -->
+  <div class="scene" id="scene-2d">
+    <div class="chapter-label">What You Chose Not to Follow</div>
+    <div class="scene-text">
+      <p>Jayson froze when you grabbed his arm. For a second you thought he'd argue. Then he looked at you—really looked—and something shifted in his face.</p>
+      <p>You both stood there while the orb drifted slowly between the trees, unhurried, unconcerned with you. As if it had already gotten what it came for.</p>
+      <p>You made it back to camp. Marcos wasn't there.</p>
+      <p>He hadn't come back while you were gone.</p>
+      <div class="atmosphere">
+        <p>The fire was low. The girls were huddled under a blanket. The forest stood at the edge of the clearing like it was waiting to see what you'd do next—patient the way something is patient when it holds all the cards.</p>
+      </div>
+      <p>You fed the fire. You watched the treeline. You told yourself Marcos was fine—just turned around, just lost the path—and you almost believed it.</p>
+      <p>But you kept thinking about the way the light had paused. The way it had turned.</p>
+      <p>The way it had looked at you both, and then moved on.</p>
+      <p><em>Like it had already made its choice.</em></p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know what the forest wanted?</div>
+      <div class="buy-headline">The Wrong Clearing</div>
+      <div class="buy-body">Isaac's story—the one that started with a camping trip he was warned to avoid—is already written. The real answers are waiting.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE BAD: Paper ending -->
+  <div class="scene" id="scene-bad">
+    <div class="chapter-label">A Brief and Terrible Miscalculation</div>
+    <div class="scene-text">
+      <p>You threw paper.</p>
+      <p>Jayson threw scissors.</p>
+      <p>Marcos threw scissors.</p>
+      <p>Everyone stared at you.</p>
+      <p><em>You always throw rock.</em></p>
+      <p>"Go," Jayson said.</p>
+      <p>So you went—both of you, Jayson and Marcos, flashlights cutting into the dark toward the orb. You watched their beams bob between the trees. You watched the orb pulse once, twice—brighter now, hungrier—and then the flashlight beams swung wildly sideways.</p>
+      <p>Then they were gone.</p>
+      <p>Not gone like <em>around a bend</em>. Gone like <em>removed</em>.</p>
+      <p>The orb was still there. Still pulsing. Still drifting—and now it was drifting toward camp.</p>
+      <p>Ava screamed.</p>
+      <p>Seth was already running.</p>
+      <p>Josie grabbed your hand and pulled, and you ran—all of you, crashing through the dark, branches whipping, lungs burning, the fire shrinking behind you—and somewhere in the trees behind you, quiet as breath, the orb kept pace.</p>
+      <p>You should have thrown rock.</p>
+      <p><strong>You always throw rock.</strong></p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">In the real story, Isaac threw rock.</div>
+      <div class="buy-headline">Find out what that cost him.</div>
+      <div class="buy-body">The Wrong Clearing doesn't let anyone off that easy.</div>
+      <a class="buy-btn" href="https://www.amazon.com/Wrong-Clearing-Jeremy-Eagan-ebook/dp/B0FPF19DBF" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Try again (throw rock this time)</button>
+    </div>
+  </div>
+
+  <footer class="game-footer">
+    Station Press &nbsp;·&nbsp; stationpressbooks.com
+  </footer>
+
+</div>
+
+<script>
+  const visited = new Set([0]);
+  const sceneOrder = {
+    'scene-0': 0,
+    'scene-1a': 1, 'scene-1b': 1,
+    'scene-2a': 2, 'scene-2b': 2, 'scene-2c': 2, 'scene-2d': 2,
+    'scene-bad': 1, 'scene-bad-1a': 2, 'scene-bad-1b': 2,
+  };
+
+  function goTo(sceneId) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    const next = document.getElementById(sceneId);
+    next.classList.add('active');
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const dotIndex = sceneOrder[sceneId];
+    visited.add(dotIndex);
+    updateDots(dotIndex);
+  }
+
+  function updateDots(current) {
+    for (let i = 0; i <= 3; i++) {
+      const dot = document.getElementById('dot-' + i);
+      if (!dot) continue;
+      dot.className = 'progress-dot';
+      if (i < current && visited.has(i)) dot.classList.add('visited');
+      else if (i === current) dot.classList.add('current');
+    }
+  }
+
+  function restart() {
+    visited.clear();
+    visited.add(0);
+    goTo('scene-0');
+    updateDots(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
