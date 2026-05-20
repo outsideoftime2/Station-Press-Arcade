@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The bed's ready. — Station Press Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0c0f;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(100,160,220,0.25);
+    --text: #d8dce4;
+    --text-muted: #7a8090;
+    --text-dim: #454850;
+    --blue: #4a8ab5;
+    --blue-light: #6aaad5;
+    --blue-dim: rgba(74,138,181,0.08);
+    --orange: #c8762a;
+    --signal: #e8c84a;
+    --white: #eef0f4;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.75;
+  }
+
+  body {
+    background-image:
+      radial-gradient(ellipse at 30% 0%, rgba(20,40,70,0.5) 0%, transparent 55%),
+      radial-gradient(ellipse at 70% 100%, rgba(10,15,25,0.7) 0%, transparent 55%);
+  }
+
+  #game-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+
+  .game-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .imprint {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.5rem;
+  }
+
+  .game-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+  }
+
+  .game-title .accent { color: var(--blue-light); }
+
+  .game-subtitle {
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 0.75rem;
+  }
+
+  .scene { display: none; animation: fadeIn 0.65s ease forwards; }
+  .scene.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .scene-text { margin-bottom: 2.5rem; }
+
+  .scene-text p {
+    margin-bottom: 1.25em;
+    font-weight: 300;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  .scene-text p:last-child { margin-bottom: 0; }
+  .scene-text em { font-style: italic; color: var(--white); }
+  .scene-text strong { font-weight: 600; color: var(--white); }
+
+  .broadcast {
+    border-left: 2px solid var(--orange);
+    padding: 0.75rem 1.25rem;
+    margin: 1.75rem 0;
+    background: rgba(200,118,42,0.06);
+  }
+
+  .broadcast p {
+    color: #d4a060 !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 0.4em !important;
+    letter-spacing: 0.03em;
+  }
+
+  .broadcast p:last-child { margin-bottom: 0 !important; }
+
+  .chapter-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .chapter-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .choices {
+    margin-top: 2.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+  }
+
+  .choices-prompt {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 1.25rem;
+  }
+
+  .choice-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    text-align: left;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--blue);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+    transform-origin: bottom;
+  }
+
+  .choice-btn:hover {
+    border-color: var(--border-hover);
+    background: var(--blue-dim);
+    color: var(--white);
+    padding-left: 1.6rem;
+  }
+
+  .choice-btn:hover::before { transform: scaleY(1); }
+
+  .choice-btn .choice-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--blue-light);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .choice-btn .choice-text { font-weight: 300; line-height: 1.5; }
+
+  .choice-btn.bad-end { border-color: rgba(100,130,160,0.15); }
+  .choice-btn.bad-end .choice-label { color: #4a6880; }
+  .choice-btn.bad-end:hover { border-color: rgba(100,130,160,0.3); background: rgba(100,130,160,0.05); }
+  .choice-btn.bad-end::before { background: #4a6880; }
+
+  .buy-section {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    border: 1px solid rgba(232,200,74,0.2);
+    background: rgba(232,200,74,0.03);
+    text-align: center;
+  }
+
+  .buy-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--signal);
+    margin-bottom: 0.75rem;
+  }
+
+  .buy-headline {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-style: italic;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+
+  .buy-body {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .buy-btn {
+    display: inline-block;
+    background: var(--signal);
+    color: #1a1400;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 2.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .buy-btn:hover { background: #f0d455; transform: translateY(-1px); }
+
+  .restart-btn {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0.5rem;
+  }
+
+  .restart-btn:hover { color: var(--text-muted); }
+
+  .progress {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 2.5rem;
+  }
+
+  .progress-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border-hover);
+    transition: background 0.3s;
+  }
+
+  .progress-dot.visited { background: #2a5070; }
+  .progress-dot.current { background: var(--blue-light); }
+
+  .game-footer {
+    text-align: center;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+  <header class="game-header">
+    <div class="imprint">Station Press Arcade</div>
+    <h1 class="game-title">The bed's <span class="accent">ready.</span></h1>
+    <div class="game-subtitle">A story from The Sleep Directive</div>
+  </header>
+
+  <div class="progress">
+    <div class="progress-dot current" id="dot-0"></div>
+    <div class="progress-dot" id="dot-1"></div>
+    <div class="progress-dot" id="dot-2"></div>
+    <div class="progress-dot" id="dot-3"></div>
+  </div>
+
+  <!-- SCENE 0: Opening -->
+  <div class="scene active" id="scene-0">
+    <div class="chapter-label">UT Medical Center — Safe Zone One</div>
+    <div class="scene-text">
+      <p>You are in a paper gown at the end of a white hallway, and none of it makes any sense.</p>
+      <p>Two hours ago, you were washing dishes. Then the emergency alert. Then the Custodians. Then the transport, the facility, and a blonde woman in a white coat who made you put your clothes on a conveyor belt with a cheerfulness that did not match the situation at all.</p>
+      <p>Now there is a doctor. Middle-aged, neatly trimmed beard, kind eyes—the rehearsed kind. Dr. Bradshaw. He says he'll walk you through the process.</p>
+      <p>"Spare me the script," you say. "I just want to see my family."</p>
+      <p>"You will." He guides you to a bed and draws a curtain. "With this global attack of toxins, the best way we can protect the citizens of Knoxville is to put them to sleep and store them in facilities designed to withstand this sort of terror—until it's safe to go outside again."</p>
+      <p>He pauses.</p>
+      <p>"A temporary medical coma. IV nutrients. You'll be woken when the time comes."</p>
+      <p>Beyond the curtain, you watch feet. White shoes moving efficiently. Then black combat boots step to a bedside. The nurse doesn't return. No vitals checked. The boots wheel whoever it was away.</p>
+      <p>"Any questions?" Bradshaw asks.</p>
+      <p>Hundreds.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">How do you play this?</div>
+      <button class="choice-btn" onclick="goTo('scene-1a')">
+        <span class="choice-label">Ask every question you have</span>
+        <span class="choice-text">Every question buys time. Time means options. The doctor seems almost human—and humans have tells.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-1b')">
+        <span class="choice-label">Stop talking. Start looking.</span>
+        <span class="choice-text">You already noticed the keypad on the far door. The Custodian punched in the code without hiding it when he brought you in. You file that away for the right moment.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-1c')">
+        <span class="choice-label">Cooperate. Your family already did.</span>
+        <span class="choice-text">Your wife June must be somewhere in this building. The kids too. Maybe Bradshaw is telling the truth. Maybe this is the only way through.</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE 1C: Cooperate immediately -->
+  <div class="scene" id="scene-1c">
+    <div class="chapter-label">All Will Be Made Known</div>
+    <div class="scene-text">
+      <p>You lay back.</p>
+      <p>The nurse hands you the flat red digital pad. June is on the screen—paper gown, IV in her arm, clutching her own device. She is crying. Nodding for the medicine. The nurse swipes the screen. Sadie. Then Sam—catatonic, no device, already under.</p>
+      <p>Your family is already asleep.</p>
+      <p>Bradshaw's voice is soft. Practiced. Something about nutrient delivery, about waking when the threat had passed, about how this was the only way to guarantee survival. His voice has the cadence of someone reading from a script they'd already delivered a hundred times tonight.</p>
+      <p>The ceiling tiles are very white.</p>
+      <p>You think about June. The way she rose on her tiptoes to kiss you in the driveway, right before all of this.</p>
+      <p>The IV is cold going in.</p>
+      <p>The lights dimmed—or maybe your eyes did.</p>
+      <p><em>All will be made known.</em></p>
+      <p><em>That was the last thing you are sure you heard.</em></p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Will Mercer did not cooperate.</div>
+      <div class="buy-headline">That's the whole story.</div>
+      <div class="buy-body">What's waiting on the other side of sleep isn't safety—and waking up may be humanity's last chance. The Sleep Directive is available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over (don't cooperate)</button>
+    </div>
+  </div>
+
+  <!-- SCENE 1A: Ask every question -->
+  <div class="scene" id="scene-1a">
+    <div class="chapter-label">Questions</div>
+    <div class="scene-text">
+      <p>"Where are you putting everyone? There aren't enough beds."</p>
+      <p>Bradshaw chuckles. "Not many think to ask that. Most ask if it'll hurt, or if they'll dream, or if they'll need a—"</p>
+      <p>"The beds."</p>
+      <p>"Custodian leadership has a plan."</p>
+      <p>"That you don't know."</p>
+      <p>He shakes his head.</p>
+      <p>"You really believe every country in the world got hit with the same weapon on the same day and nobody knows who did it?"</p>
+      <p>His kind mask cracks. Just for a second. "Do you have more questions?"</p>
+      <p>You keep going. Each answer lands somewhere between evasion and rehearsed sincerity—the cadence of someone reading from a script they'd already delivered a hundred times tonight.</p>
+      <p>Then the nurse comes in with the flat red digital pad.</p>
+      <p>You see June. Paper gown, IV in her arm. Weeping. Nodding for the medicine. The nurse swipes. Sadie, same thing. Then Sam—catatonic, already under.</p>
+      <p>Your family is asleep.</p>
+      <p>Bradshaw puts his hand on your chest to ease you back.</p>
+      <p>You push back. <strong>"No way."</strong></p>
+      <p>Custodians burst through the curtain.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">Ten seconds before they have you pinned.</div>
+      <button class="choice-btn" onclick="goTo('scene-a1')">
+        <span class="choice-label">Run. Alone. Now.</span>
+        <span class="choice-text">You roll into Bradshaw, you're on your feet, and you go for the keypad. You caught a glimpse of the code in the hallway. You're fast. Maybe fast enough.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-a2')">
+        <span class="choice-label">Let them take you. Wait for processing.</span>
+        <span class="choice-text">Fighting now, outnumbered and in a paper gown, is a losing play. There may be a better moment coming—and a better ally than none.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-a3')">
+        <span class="choice-label">Stop. June already went under.</span>
+        <span class="choice-text">She's asleep. The kids are asleep. You watched it happen on that screen. What exactly are you still fighting for?</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE 1B: Stop talking, start looking -->
+  <div class="scene" id="scene-1b">
+    <div class="chapter-label">6554</div>
+    <div class="scene-text">
+      <p>You stop talking and start watching.</p>
+      <p>Bradshaw explains the process. You nod at the right moments. Behind the curtain, feet move—white shoes, then black combat boots, then the squeak of wheels. Someone being moved. The nurse doesn't come back. No vitals checked.</p>
+      <p>The keypad by the far door: 6-5-5-4. The Custodian hadn't even tried to hide it. Which meant he figured the code was useless to you.</p>
+      <p><em>You file that away.</em></p>
+      <p>Then the nurse comes in with the flat red digital pad.</p>
+      <p>June. Paper gown, IV in her arm. Weeping quietly, nodding for the medicine. The nurse swipes. Sadie. Then Sam—already under, no device, just gone.</p>
+      <p>Your family is already asleep.</p>
+      <p>Bradshaw leans in, syringe ready. "Are you ready to cooperate, Mr. Mercer?"</p>
+      <p>You look at the curtain. At the keypad beyond it. At the syringe hovering near your arm.</p>
+      <p>The whole room is one decision away from going sideways.</p>
+    </div>
+    <div class="choices">
+      <div class="choices-prompt">You have the code. You have one window.</div>
+      <button class="choice-btn" onclick="goTo('scene-b1')">
+        <span class="choice-label">Go. Now. Alone.</span>
+        <span class="choice-text">Before he gets the IV in. You roll off the bed and go for the keypad. 6-5-5-4. You know it. You're ready.</span>
+      </button>
+      <button class="choice-btn" onclick="goTo('scene-b2')">
+        <span class="choice-label">Let it play out. Wait for processing.</span>
+        <span class="choice-text">One Custodian in the room, one outside, Bradshaw between you and the door—bad odds. There may be a better moment, and a better situation, coming.</span>
+      </button>
+      <button class="choice-btn bad-end" onclick="goTo('scene-b3')">
+        <span class="choice-label">Stop. June already went under.</span>
+        <span class="choice-text">She's asleep. The kids are asleep. What exactly are you fighting for at this point?</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENE A1: Run alone (from 1A) -->
+  <div class="scene" id="scene-a1">
+    <div class="chapter-label">Almost</div>
+    <div class="scene-text">
+      <p>You roll off the bed and move—paper gown tears away from your body. Cold tile on bare feet, stolen white lab coat thrown over your shoulders for cover, you head straight for the keypad at the end of the hall.</p>
+      <p>Boots thundering behind you.</p>
+      <p>"Stop!"</p>
+      <p>Fingers claw your shoulder. You punch in 6. More pulling. You get 5—then another hand grabs your coat, dragging you sideways. You stretch. Hit 5 again.</p>
+      <p>One digit short. Out of reach.</p>
+      <p>They pin you. Taser probes hit your shoulder. Your body seizes—drool in your beard, glasses on the floor, the ceiling spinning white above you.</p>
+      <p>When your vision clears, you are in a metal chair in a concrete room. Bare walls. The smell of sweat and burned flesh and something like the air after a lightning strike.</p>
+      <p>The blonde from the de-robing room stands across from you. She places your glasses on your face without being asked.</p>
+      <p>"I know you didn't like the gown," she says. "But my God."</p>
+      <p>You look down. Lab coat, barely holding together, stained yellow. You laugh—the kind of laugh that happens because the alternative is worse.</p>
+      <p><em>Just hours ago, you were washing dishes.</em></p>
+      <p>She leaves. The armed Custodian by the door does not.</p>
+      <p>One digit short. A few seconds. Maybe some shoes.</p>
+      <p>But almost isn't a plan. And this wasn't how Will Mercer actually got out.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know how he actually did it?</div>
+      <div class="buy-headline">The Sleep Directive</div>
+      <div class="buy-body">Almost isn't the ending. The real escape is in the book—and what Will finds outside is worse than what he left behind. Available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE A2: Let them take you (from 1A) -->
+  <div class="scene" id="scene-a2">
+    <div class="chapter-label">This Close</div>
+    <div class="scene-text">
+      <p>They walk you to a concrete room—bare walls, metal chairs, the smell of sweat and burned flesh. A heavy man sits across from you. Tank top, burn marks on his arms from his own taser encounter. He hadn't cooperated either.</p>
+      <p>The blonde comes in, gives you your glasses back, says something about processing, and leaves. One Custodian remains by the door.</p>
+      <p>"I'm Will," you say.</p>
+      <p>"Who cares. We're dead men."</p>
+      <p>You wink.</p>
+      <p>"Don't wink at me."</p>
+      <p>You look at the door. At the Custodian. At the big man. You do some math.</p>
+      <p>"Give me your shirt," you say. Loud enough.</p>
+      <p>"I'm not giving you my shirt."</p>
+      <p>"How about your pants?"</p>
+      <p>He rises from his seat, cracking his knuckles. "How about you try to take them?"</p>
+      <p>The Custodian steps forward—exactly what you need. You keep the big man between you and the taser, circling, the door drifting into range behind you. Your hand finds the doorknob.</p>
+      <p>The big man lunges—not at you. At the Custodian. Whether he understood the play or just wanted someone to hit, it doesn't matter. The taser fires. He goes down hard.</p>
+      <p>You hit the hallway running. Straight for the keypad.</p>
+      <p>6—5—5—</p>
+      <p>A hand closes around your collar from a doorway you hadn't clocked. A second Custodian. You hadn't known there was a second one.</p>
+      <p>The door was right there.</p>
+      <p><em>Right there.</em></p>
+      <p>But this wasn't how Will Mercer actually got out either.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know how he actually did it?</div>
+      <div class="buy-headline">The Sleep Directive</div>
+      <div class="buy-body">This close isn't the ending. The real escape is in the book—and what Will finds outside is worse than what he left behind. Available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE A3: Stop — gave up after seeing family on screen -->
+  <div class="scene" id="scene-a3">
+    <div class="chapter-label">What the Dots Connected To</div>
+    <div class="scene-text">
+      <p>You stop pushing.</p>
+      <p>The Custodians ease back. Bradshaw straightens his coat. The curtain settles.</p>
+      <p>You watched June on that screen. You watched Sadie. You watched Sam go under without a fight because there was no fight left in her. Your family didn't resist. Maybe they knew something you don't. Maybe they were just tired.</p>
+      <p>Bradshaw's voice is gentle. "You're doing the right thing."</p>
+      <p>You almost believe him. The IV goes in cold. The ceiling is very white and very still.</p>
+      <p>You think about the driveway—bare feet on gravel, June's hand on your arm, the emergency alert screaming from everyone's phone at once. All those questions you had.</p>
+      <p><em>You never did figure out what the dots connected to.</em></p>
+      <p>The lights go out.</p>
+      <p>Or you do.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Will figured out what the dots connected to.</div>
+      <div class="buy-headline">It was worse than he thought.</div>
+      <div class="buy-body">What's waiting on the other side of sleep isn't safety. The Sleep Directive is available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE B1: Go alone now (from 1B) -->
+  <div class="scene" id="scene-b1">
+    <div class="chapter-label">Almost</div>
+    <div class="scene-text">
+      <p>You roll off the bed and move—paper gown tears away from your body. Cold tile on bare feet, stolen white lab coat thrown over your shoulders for cover, you head straight for the keypad at the end of the hall.</p>
+      <p>Boots thundering behind you.</p>
+      <p>"Stop!"</p>
+      <p>Fingers claw your shoulder. You punch in 6. More pulling. You get 5—then another hand grabs your coat, dragging you sideways. You stretch. Hit 5 again.</p>
+      <p>One digit short. Out of reach.</p>
+      <p>They pin you. Taser probes hit your shoulder. Your body seizes—drool in your beard, glasses on the floor, the ceiling spinning white above you.</p>
+      <p>When your vision clears, you are in a metal chair in a concrete room. Bare walls. The smell of sweat and burned flesh and something like the air after a lightning strike.</p>
+      <p>The blonde from the de-robing room stands across from you. She places your glasses on your face without being asked.</p>
+      <p>"I know you didn't like the gown," she says. "But my God."</p>
+      <p>You look down. Lab coat, barely holding together, stained yellow. You laugh—the kind of laugh that happens because the alternative is worse.</p>
+      <p><em>Just hours ago, you were washing dishes.</em></p>
+      <p>She leaves. The armed Custodian by the door does not.</p>
+      <p>You had the code. You had the plan. You were watching the whole time and it still wasn't enough.</p>
+      <p>But almost isn't a plan. And this wasn't how Will Mercer actually got out.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know how he actually did it?</div>
+      <div class="buy-headline">The Sleep Directive</div>
+      <div class="buy-body">Almost isn't the ending. The real escape is in the book—and what Will finds outside is worse than what he left behind. Available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE B2: Let it play out (from 1B) -->
+  <div class="scene" id="scene-b2">
+    <div class="chapter-label">This Close</div>
+    <div class="scene-text">
+      <p>They walk you to a concrete room—bare walls, metal chairs, the smell of sweat and burned flesh. A heavy man sits across from you. Tank top, burn marks on his arms from his own taser encounter. He hadn't cooperated either.</p>
+      <p>The blonde comes in, gives you your glasses back, says something about processing, and leaves. One Custodian remains by the door.</p>
+      <p>"I'm Will," you say.</p>
+      <p>"Who cares. We're dead men."</p>
+      <p>You wink.</p>
+      <p>"Don't wink at me."</p>
+      <p>You look at the door. At the Custodian. At the big man. You do some math.</p>
+      <p>"Give me your shirt," you say. Loud enough.</p>
+      <p>"I'm not giving you my shirt."</p>
+      <p>"How about your pants?"</p>
+      <p>He rises from his seat, cracking his knuckles. "How about you try to take them?"</p>
+      <p>The Custodian steps forward—exactly what you need. You keep the big man between you and the taser, circling, the door drifting into range behind you. Your hand finds the doorknob.</p>
+      <p>The big man lunges—not at you. At the Custodian. Whether he understood the play or just wanted someone to hit, it doesn't matter. The taser fires. He goes down hard.</p>
+      <p>You hit the hallway running. Straight for the keypad.</p>
+      <p>6—5—5—</p>
+      <p>A hand closes around your collar from a doorway you hadn't clocked. A second Custodian. You hadn't known there was a second one.</p>
+      <p>The door was right there.</p>
+      <p><em>Right there.</em></p>
+      <p>But this wasn't how Will Mercer actually got out either.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Want to know how he actually did it?</div>
+      <div class="buy-headline">The Sleep Directive</div>
+      <div class="buy-body">This close isn't the ending. The real escape is in the book—and what Will finds outside is worse than what he left behind. Available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <!-- SCENE B3: Stop — gave up after watching and waiting -->
+  <div class="scene" id="scene-b3">
+    <div class="chapter-label">The Code Was Never the Problem</div>
+    <div class="scene-text">
+      <p>You lay back.</p>
+      <p>The fight goes out of you the way air goes out of a tire—not all at once, just steadily, until there is nothing left to hold the shape.</p>
+      <p>You had the code. You had the plan. You watched everything and noticed everything and it didn't matter, because June is asleep, and Sadie is asleep, and Sam went under without a device and without a fight.</p>
+      <p>Bradshaw's voice is gentle. Almost kind. "You're doing the right thing."</p>
+      <p>You almost believe him.</p>
+      <p>The IV goes in cold. The ceiling is very white and very still. You think about the keypad—6-5-5-4, right there, ten feet away, useless now.</p>
+      <p><em>You never did figure out what the dots connected to.</em></p>
+      <p>The lights go out.</p>
+      <p>Or you do.</p>
+    </div>
+    <div class="buy-section">
+      <div class="buy-eyebrow">Will figured out what the dots connected to.</div>
+      <div class="buy-headline">The conspiracy runs deep.</div>
+      <div class="buy-body">What's waiting on the other side of sleep isn't safety. The Sleep Directive is available now in paperback, Kindle, and Kindle Unlimited.</div>
+      <a class="buy-btn" href="https://www.amazon.com/dp/B0H24Y4P47" target="_blank">Get the Book</a>
+      <br>
+      <button class="restart-btn" onclick="restart()">↩ Start over</button>
+    </div>
+  </div>
+
+  <footer class="game-footer">
+    Station Press &nbsp;·&nbsp; stationpressbooks.com
+  </footer>
+
+</div>
+
+<script>
+  const visited = new Set([0]);
+  const sceneOrder = {
+    'scene-0': 0,
+    'scene-1a': 1, 'scene-1b': 1, 'scene-1c': 1,
+    'scene-a1': 2, 'scene-a2': 2, 'scene-a3': 2,
+    'scene-b1': 2, 'scene-b2': 2, 'scene-b3': 2,
+  };
+
+  function goTo(sceneId) {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    const next = document.getElementById(sceneId);
+    next.classList.add('active');
+    next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const dotIndex = Math.min(sceneOrder[sceneId], 3);
+    visited.add(dotIndex);
+    updateDots(dotIndex);
+  }
+
+  function updateDots(current) {
+    for (let i = 0; i <= 3; i++) {
+      const dot = document.getElementById('dot-' + i);
+      if (!dot) continue;
+      dot.className = 'progress-dot';
+      if (i < current && visited.has(i)) dot.classList.add('visited');
+      else if (i === current) dot.classList.add('current');
+    }
+  }
+
+  function restart() {
+    visited.clear();
+    visited.add(0);
+    goTo('scene-0');
+    updateDots(0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
