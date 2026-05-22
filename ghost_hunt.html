@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghost Hunt—I-55 Paranormal</title>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Inconsolata:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080b0f;
+  --bg-mid: #0d1118;
+  --bg-panel: #0f141c;
+  --border: rgba(100,160,200,0.1);
+  --border-glow: rgba(100,200,255,0.25);
+  --text: #c8d8e8;
+  --text-muted: #5a7a9a;
+  --text-dim: #6a8aaa;
+  --cyan: #7ecfef;
+  --cyan-dim: rgba(126,207,239,0.12);
+  --cyan-glow: rgba(126,207,239,0.4);
+  --red: #c0392b;
+  --red-dim: rgba(192,57,43,0.15);
+  --green: #2ecc71;
+  --green-dim: rgba(46,204,113,0.12);
+  --amber: #e8a030;
+  --white: #eef5ff;
+  --static-opacity: 0;
+}
+
+html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'IM Fell English', Georgia, serif; font-size: 18px; line-height: 1.8; }
+
+body {
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(30,60,100,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse at 10% 90%, rgba(10,20,40,0.5) 0%, transparent 50%);
+}
+
+/* Static overlay */
+body::before {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: 0.4;
+}
+
+#game-wrap { max-width: 740px; margin: 0 auto; padding: 2.5rem 1.75rem 5rem; position: relative; }
+
+/* Header */
+.game-header { text-align: center; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+.imprint { font-family: 'Inconsolata', monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.5rem; }
+.game-title { font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 400; color: var(--white); line-height: 1.05; margin-bottom: 0.5rem; text-shadow: 0 0 40px rgba(126,207,239,0.3); }
+.game-title .accent { color: var(--cyan); }
+.game-subtitle { font-family: 'Inconsolata', monospace; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.75rem; }
+
+/* Progress */
+.progress-track { display: flex; justify-content: center; gap: 0.6rem; margin-top: 1.5rem; }
+.progress-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); transition: all 0.4s; }
+.progress-dot.visited { background: var(--text-muted); }
+.progress-dot.current { background: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+
+/* Scenes */
+.scene { display: none; animation: fadeIn 0.7s ease forwards; }
+.scene.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Chapter label */
+.chapter-label { font-family: 'Inconsolata', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+.chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Scene text */
+.scene-text { margin-bottom: 2.5rem; }
+.scene-text p { margin-bottom: 1.2em; font-size: 1.05rem; color: var(--text); font-weight: 400; }
+.scene-text p:last-child { margin-bottom: 0; }
+.scene-text em { font-style: italic; color: var(--white); }
+.scene-text strong { color: var(--cyan); font-style: normal; }
+
+/* Fade-in blocks */
+.fade-block { opacity: 0; transform: translateY(6px); transition: opacity 0.8s ease, transform 0.8s ease; }
+.fade-block.revealed { opacity: 1; transform: translateY(0); }
+
+/* Dialogue */
+.dialogue { border-left: 2px solid rgba(126,207,239,0.3); padding: 0.75rem 1.25rem; margin: 1.75rem 0; background: var(--cyan-dim); }
+.dialogue p { font-style: italic; color: #a8cce0 !important; font-size: 0.95rem !important; margin-bottom: 0.4em !important; }
+.dialogue p:last-child { margin-bottom: 0 !important; }
+.dialogue .speaker { font-family: 'Inconsolata', monospace; font-size: 0.75rem; letter-spacing: 0.1em; color: var(--text-dim); font-style: normal; display: block; margin-bottom: 0.2rem; text-transform: uppercase; }
+
+/* Choices */
+.choices { margin-top: 2.5rem; border-top: 1px solid var(--border); padding-top: 2rem; }
+.choices-prompt { font-family: 'Inconsolata', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1.25rem; }
+.choice-btn { display: block; width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text); font-family: 'IM Fell English', serif; font-size: 1rem; text-align: left; padding: 1rem 1.25rem; cursor: pointer; transition: all 0.22s ease; margin-bottom: 0.75rem; position: relative; overflow: hidden; }
+.choice-btn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--cyan-dim); transition: width 0.22s ease; }
+.choice-btn:hover { border-color: var(--border-glow); color: var(--white); }
+.choice-btn:hover::before { width: 100%; }
+.choice-btn .choice-label { display: block; font-size: 0.95rem; color: var(--cyan); margin-bottom: 0.3rem; position: relative; }
+.choice-btn .choice-text { display: block; font-size: 0.88rem; color: var(--text-muted); font-style: italic; position: relative; }
+.choice-btn.bad-end { }
+.choice-btn.retire-end { }
+
+/* Tool picker */
+.tool-section { margin: 2rem 0; }
+.tool-section-label { font-family: 'Inconsolata', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem; }
+.tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+@media (min-width: 500px) { .tool-grid { grid-template-columns: repeat(3, 1fr); } }
+.tool-btn { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-muted); font-family: 'Inconsolata', monospace; font-size: 0.72rem; letter-spacing: 0.05em; padding: 0.6rem 0.75rem; cursor: pointer; text-align: left; transition: all 0.2s; line-height: 1.3; }
+.tool-btn:hover { border-color: var(--border-glow); color: var(--text); }
+.tool-btn.selected { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+.tool-btn .tool-icon { display: block; font-size: 1.1rem; margin-bottom: 0.2rem; }
+.tool-count { font-family: 'Inconsolata', monospace; font-size: 0.8rem; color: var(--text-muted); margin-top: 0.75rem; }
+.tool-count span { color: var(--cyan); }
+.enter-btn { display: block; width: 100%; background: transparent; border: 1px solid var(--border-glow); color: var(--cyan); font-family: 'Inconsolata', monospace; font-size: 0.85rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 1rem; cursor: pointer; margin-top: 1.5rem; transition: all 0.2s; }
+.enter-btn:hover { background: var(--cyan-dim); }
+.enter-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Evidence panel */
+.evidence-panel { background: var(--bg-panel); border: 1px solid var(--border); padding: 1.5rem; margin: 1.5rem 0; }
+.evidence-panel-title { font-family: 'Inconsolata', monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 1rem; }
+.evidence-item { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+.evidence-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.evidence-icon { color: var(--cyan); font-size: 1.1rem; flex-shrink: 0; }
+.evidence-label { font-family: 'Inconsolata', monospace; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.1rem; }
+.evidence-result { color: var(--text); }
+.evidence-result.confirmed { color: var(--green); }
+.evidence-result.negative { color: var(--text-muted); font-style: italic; }
+
+/* Conclusion selector */
+.conclusion-grid { display: grid; gap: 0.5rem; margin-top: 1rem; }
+.conclusion-btn { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-muted); font-family: 'Inconsolata', monospace; font-size: 0.8rem; letter-spacing: 0.05em; padding: 0.75rem 1rem; cursor: pointer; text-align: left; transition: all 0.2s; }
+.conclusion-btn:hover { border-color: var(--border-glow); color: var(--white); background: var(--cyan-dim); }
+
+/* Scare effects */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  10% { opacity: 0.85; }
+  20% { opacity: 1; }
+  30% { opacity: 0.7; }
+  40% { opacity: 1; }
+  60% { opacity: 0.9; }
+  70% { opacity: 0.6; }
+  80% { opacity: 1; }
+  90% { opacity: 0.8; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-3px) rotate(-0.3deg); }
+  30% { transform: translateX(3px) rotate(0.3deg); }
+  45% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+}
+.flickering { animation: flicker 0.6s ease; }
+.shaking { animation: shake 0.5s ease; }
+
+/* Signup / ending */
+.signup-section { border: 1px solid rgba(126,207,239,0.2); background: var(--bg-panel); padding: 2.5rem 2rem; text-align: center; margin-top: 2.5rem; }
+.signup-eyebrow { font-family: 'Inconsolata', monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+.signup-headline { font-size: 1.8rem; color: var(--white); margin-bottom: 0.75rem; text-shadow: 0 0 30px rgba(126,207,239,0.2); }
+.signup-body { font-size: 0.95rem; color: var(--text-muted); font-style: italic; margin-bottom: 2rem; line-height: 1.6; }
+.signup-btn { display: inline-block; background: transparent; border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Inconsolata', monospace; font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.9rem 2.5rem; text-decoration: none; transition: all 0.2s; cursor: pointer; }
+.signup-btn:hover { background: var(--cyan-dim); }
+.restart-btn { background: transparent; border: none; color: var(--text-dim); font-family: 'Inconsolata', monospace; font-size: 0.75rem; letter-spacing: 0.1em; margin-top: 1.5rem; cursor: pointer; text-decoration: underline; display: block; margin-left: auto; margin-right: auto; }
+.restart-btn:hover { color: var(--text-muted); }
+
+/* Bad ending special */
+.bad-ending-text { font-size: 1.05rem; color: var(--text-muted); line-height: 2; }
+.bad-ending-text p { color: var(--text-muted) !important; }
+
+/* Footer */
+.game-footer { font-family: 'Inconsolata', monospace; font-size: 10px; letter-spacing: 0.2em; text-align: center; color: var(--text-dim); margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+
+/* Ambient glow on scare */
+.scare-glow { box-shadow: inset 0 0 120px rgba(192,57,43,0.1); }
+
+/* Night investigation atmosphere */
+.night-header { background: linear-gradient(180deg, rgba(10,20,40,0.8) 0%, transparent 100%); border-bottom: 1px solid var(--border); padding: 1.5rem; margin: -0.5rem -0.5rem 2rem; text-align: center; font-family: 'Inconsolata', monospace; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
+
+.scan-line { border-left: 3px solid var(--red); padding-left: 1rem; margin: 1.5rem 0; color: var(--amber) !important; font-family: 'Inconsolata', monospace; font-size: 0.85rem; }
+
+/* ── GEAR BAR ── */
+#gear-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(8,11,15,0.96);
+  border-top: 1px solid rgba(100,160,200,0.2);
+  padding: 0.6rem 1rem;
+  z-index: 500;
+  backdrop-filter: blur(6px);
+}
+#gear-bar.active { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+.gear-slot {
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.4rem 0.6rem; min-width: 70px;
+  position: relative; transition: border-color 0.2s;
+  font-family: 'Inconsolata', monospace;
+}
+.gear-slot.pulsing { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow); }
+.gear-slot.alerting { border-color: var(--amber); box-shadow: 0 0 10px rgba(232,160,48,0.4); }
+.gear-slot-icon { font-size: 1.3rem; line-height: 1; }
+.gear-slot-name { font-size: 0.58rem; letter-spacing: 0.05em; color: var(--text-dim); text-transform: uppercase; margin-top: 0.15rem; text-align: center; }
+.gear-slot-reading { font-size: 0.62rem; color: var(--cyan); min-height: 0.9rem; text-align: center; margin-top: 0.1rem; letter-spacing: 0.03em; }
+.mel-bar { width: 100%; height: 3px; background: var(--text-dim); border-radius: 2px; margin-top: 0.25rem; overflow: hidden; }
+.mel-bar-fill { height: 100%; width: 0%; background: var(--cyan); transition: width 0.3s ease; border-radius: 2px; }
+.mel-bar-fill.danger { background: var(--red); }
+.ovilus-word { font-size: 0.75rem; color: var(--amber); font-family: 'IM Fell English', serif; min-width: 80px; text-align: center; letter-spacing: 0.05em; }
+.rem-light { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); display: inline-block; margin: 0 1px; transition: background 0.2s, box-shadow 0.2s; }
+.rem-light.on-blue   { background: #4af; box-shadow: 0 0 6px #4af; }
+.rem-light.on-green  { background: #4f8; box-shadow: 0 0 6px #4f8; }
+.rem-light.on-yellow { background: #fe4; box-shadow: 0 0 6px #fe4; }
+.rem-light.on-red    { background: #f44; box-shadow: 0 0 6px #f44; }
+.spirit-scan { font-size: 0.62rem; color: var(--text-muted); font-family: 'Inconsolata', monospace; min-width: 80px; text-align: center; letter-spacing: 0.04em; }
+.spirit-scan.word { color: var(--cyan); font-size: 0.75rem; }
+
+/* ── EVIDENCE IMAGES ── */
+.evidence-image {
+  width: 100%; max-width: 480px; margin: 1.25rem auto;
+  display: block; border: 1px solid var(--border);
+  filter: saturate(0.7) brightness(0.85);
+  transition: filter 0.5s ease;
+}
+.evidence-image:hover { filter: saturate(1) brightness(1); }
+.evidence-image-label {
+  font-family: 'Inconsolata', monospace; font-size: 0.65rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--text-dim); text-align: center; margin-bottom: 1rem;
+}
+
+/* ── HUNT HOUSE IMAGE ── */
+.hunt-house-img {
+  width: 100%; max-height: 240px; object-fit: cover;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+  filter: saturate(0.5) brightness(0.7);
+  display: block;
+}
+
+.gear-toggle {
+  margin-top: 0.3rem; padding: 0.1rem 0.4rem;
+  font-family: 'Inconsolata', monospace; font-size: 0.6rem;
+  letter-spacing: 0.1em; background: transparent;
+  border: 1px solid var(--cyan); color: var(--cyan);
+  cursor: pointer; transition: all 0.15s;
+}
+.gear-toggle:hover { background: var(--cyan-dim); }
+.gear-toggle.off { border-color: var(--text-dim); color: var(--text-dim); }
+
+/* bottom padding when gear bar visible */
+body.gear-active { padding-bottom: 100px; }
+
+/* Gear toggle switch */
+.gear-toggle { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.3rem; }
+.toggle-track { width: 28px; height: 14px; background: var(--text-dim); border-radius: 7px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+.toggle-track.on { background: var(--cyan); }
+.toggle-thumb { position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); transition: transform 0.2s; }
+.toggle-track.on .toggle-thumb { transform: translateX(14px); }
+.toggle-label { font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); font-family: 'Inconsolata', monospace; }
+
+</style>
+</head>
+<body>
+<div id="game-wrap">
+
+<header class="game-header">
+  <div class="imprint">Station Press Arcade</div>
+  <h1 class="game-title"><span class="accent">Ghost</span> Hunt</h1>
+  <div class="game-subtitle">A Paranormal Story From Purgatory</div>
+  <div class="progress-track" id="progress-track">
+    <div class="progress-dot current" id="dot-0"></div>
+    <div class="progress-dot" id="dot-1"></div>
+    <div class="progress-dot" id="dot-2"></div>
+    <div class="progress-dot" id="dot-3"></div>
+    <div class="progress-dot" id="dot-4"></div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════ SCENE 0: OPENING ═══════════════════════════════════ -->
+<div class="scene active" id="scene-0">
+  <div id="opening-sequence">
+    <p class="opening-line opening-gap" id="opening-label" style="opacity:0; transition: opacity 1s ease; font-family: 'Inconsolata', monospace; font-size: 0.7rem; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase;">— Two Years Ago —</p>
+    <div class="scene-text">
+      <p class="opening-line" id="op-0" style="opacity:0; transition: opacity 1s ease;">Two years ago your husband Ryan never returned home from a work trip.</p>
+      <p class="opening-line" id="op-1" style="opacity:0; transition: opacity 1s ease;">He tried to stop an armed robbery at the Bed &amp; Breakfast he had just checked out of.</p>
+      <p class="opening-line" id="op-2" style="opacity:0; transition: opacity 1s ease;">He ended up one of three dead at the scene.</p>
+      <p class="opening-line" id="op-3" style="opacity:0; transition: opacity 1s ease; color: var(--text-muted); font-style: italic;">The armed man got away.</p>
+
+      <p class="opening-line opening-gap" id="op-4" style="opacity:0; transition: opacity 1s ease; font-family: 'Inconsolata', monospace; font-size: 0.7rem; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase;">— One Year Ago —</p>
+      <p class="opening-line" id="op-5" style="opacity:0; transition: opacity 1s ease;">Your best friend Julie asked you out for coffee.</p>
+      <p class="opening-line" id="op-6" style="opacity:0; transition: opacity 1s ease;">She'd stayed at that same Bed &amp; Breakfast a couple of towns over.</p>
+      <p class="opening-line" id="op-7" style="opacity:0; transition: opacity 1s ease;">She wanted you to know: she felt Ryan's presence was still there.</p>
+
+      <p class="opening-line opening-gap" id="op-8" style="opacity:0; transition: opacity 1s ease; font-family: 'Inconsolata', monospace; font-size: 0.7rem; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase;">— Six Months Ago —</p>
+      <p class="opening-line" id="op-9" style="opacity:0; transition: opacity 1s ease;">You joined <strong>I-55 Paranormal</strong>, a local Illinois ghost hunting club.</p>
+      <p class="opening-line" id="op-10" style="opacity:0; transition: opacity 1s ease;">To see if there was any proof of ghosts.</p>
+
+      <p class="opening-line opening-gap" id="op-11" style="opacity:0; transition: opacity 1.4s ease; font-size: 1.35rem; color: var(--white); text-shadow: 0 0 30px rgba(126,207,239,0.3); margin-top: 1.5rem;"><em>There are.</em></p>
+    </div>
+  </div>
+  <div class="choices" id="opening-choices" style="display:none; animation: fadeIn 0.8s ease forwards;">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-crew-drive')">
+      <span class="choice-label">Take on the Bed &amp; Breakfast with your crew</span>
+      <span class="choice-text">You feel ready. Claire and Joey have been with you through every hunt. It's time to tell them—or not.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-alone-drive')">
+      <span class="choice-label">Take on the Bed &amp; Breakfast alone</span>
+      <span class="choice-text">This is personal. Too personal to share. You'll do it your way, on your own terms.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-one-more-first')">
+      <span class="choice-label">One more hunt before you look for Ryan</span>
+      <span class="choice-text">You need to be sure you're ready. One more case. One more night. Then you'll go.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ CREW DRIVE ═══════════════════════════════════ -->
+<div class="scene" id="scene-crew-drive">
+  <div class="chapter-label">The Drive</div>
+  <div class="scene-text">
+    <p>You stare out the window of the van as the team drives across the state. You gave Claire and Joey the impression you'd heard it was an active location. Honestly, you can only hope that it is.</p>
+    <p>You picked up this silly hobby just to talk to him again.</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you tell them?</div>
+    <button class="choice-btn" onclick="goTo('scene-tell-crew')">
+      <span class="choice-label">Tell your crew about Ryan's death</span>
+      <span class="choice-text">"Hey all, I got something to tell ya."</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-keep-secret')">
+      <span class="choice-label">Keep the secret and make up a story</span>
+      <span class="choice-text">You can do this without them knowing. Just focus on finding him.</span>
+    </button>
+    <button class="choice-btn retire-end" onclick="goTo('scene-retire')">
+      <span class="choice-label">Change your mind and walk away</span>
+      <span class="choice-text">Maybe this whole thing is a false hope. You pull the van over.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ ALONE DRIVE ═══════════════════════════════════ -->
+<div class="scene" id="scene-alone-drive">
+  <div class="chapter-label">Alone on the Road</div>
+  <div class="scene-text">
+    <p>You stare out the window of your car as you drive across the state. You aren't sure if you are doing the right thing or just becoming a delusional old woman.</p>
+    <p>Why would he still be there?</p>
+    <p><em>Could it really be possible to hear from him again?</em></p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-alone-crash')" class="bad-end">
+      <span class="choice-label">Keep going</span>
+      <span class="choice-text">Head straight to the B&amp;B. You know what you came for.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-turn-around')">
+      <span class="choice-label">Turn around and gather the I-55 team</span>
+      <span class="choice-text">You can't do this alone. Not really.</span>
+    </button>
+    <button class="choice-btn retire-end" onclick="goTo('scene-retire')">
+      <span class="choice-label">Change your mind and walk away</span>
+      <span class="choice-text">Leave him in peace. Move on. Without him.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ ALONE CRASH ═══════════════════════════════════ -->
+<div class="scene" id="scene-alone-crash">
+  <div class="chapter-label">The Road</div>
+  <div class="scene-text bad-ending-text">
+    <p>As you pull into town you look down at your phone. It's later than you expected.</p>
+    <p>You look up to see you have run through a red light.</p>
+    <p>Crash.</p>
+    <p>Car flips.</p>
+    <p>Red in your eyes.</p>
+    <p>Headache.</p>
+    <p>Silence.</p>
+    <p><em>You may have to find Ryan on the other side.</em></p>
+  </div>
+  <div class="signup-section">
+    <div class="signup-eyebrow">Bad Ending</div>
+    <div class="signup-headline">Not Like This</div>
+    <div class="signup-body">She never stopped looking for him. The full story of what happened at the Bed &amp; Breakfast is waiting for you.</div>
+    <a class="signup-btn" href="https://mailchi.mp/ea36527c3cc0/7dxl68bx76" target="_blank">Notify Me When It's Published</a>
+    <button class="restart-btn" onclick="restart()">↩ Try again</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ TURN AROUND / TELL THEM ═══════════════════════════════════ -->
+<div class="scene" id="scene-turn-around">
+  <div class="chapter-label">I-55 Headquarters</div>
+  <div class="scene-text">
+    <p>"Hey all, I got something to tell ya," you begin as you approach I-55 HQ. Claire and Joey are all ears. "You know how I used to be married?"</p>
+    <p>They nod.</p>
+    <p>"His name was Ryan. He was killed trying to help someone out."</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"I'm sorry."</p></div>
+    <p>"A while back a medium friend of mine told me he didn't really pass on. She said he's still at the Bed &amp; Breakfast in Springfield."</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"Let's go!"</p></div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">How much do you tell them?</div>
+    <button class="choice-btn" onclick="goTo('scene-became-gh')">
+      <span class="choice-label">Tell them you became a ghost hunter to find him</span>
+      <span class="choice-text">All of it. They deserve to know why you're really here.</span>
+    </button>
+    <button class="choice-btn bad-end" onclick="goTo('scene-lie-alive')">
+      <span class="choice-label">Tell them it's all a lie—Ryan is alive</span>
+      <span class="choice-text">Suddenly you backpedal. You don't know why.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ TELL CREW ═══════════════════════════════════ -->
+<div class="scene" id="scene-tell-crew">
+  <div class="chapter-label">Coming Clean</div>
+  <div class="scene-text">
+    <p>"Hey all, I got something to tell ya." Claire and Joey go quiet. "You know how I used to be married?"</p>
+    <p>They nod.</p>
+    <p>"His name was Ryan. He was killed trying to help someone at a robbery."</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"I'm sorry."</p></div>
+    <p>"A medium friend said he didn't really pass on. She said he's still at the Bed &amp; Breakfast."</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"The same place as our next case?"</p></div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you tell them next?</div>
+    <button class="choice-btn" onclick="goTo('scene-became-gh')">
+      <span class="choice-label">Tell them you became a ghost hunter to find him</span>
+      <span class="choice-text">The full truth. All of it.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-coincidence')">
+      <span class="choice-label">Tell them it's a wild coincidence, but you'd love their help</span>
+      <span class="choice-text">You didn't plan this. But now that you're here, you need them.</span>
+    </button>
+    <button class="choice-btn bad-end" onclick="goTo('scene-lie-alive')">
+      <span class="choice-label">Tell them it's all a lie—Ryan is alive</span>
+      <span class="choice-text">You panic. You take it back.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ BECAME GH ═══════════════════════════════════ -->
+<div class="scene" id="scene-became-gh">
+  <div class="chapter-label">The Real Reason</div>
+  <div class="scene-text">
+    <p>"When I heard he might still be here, I did a deep dive on paranormal research and skill building and—"</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"Experience."</p></div>
+    <p>"Yeah. I needed to learn as many tools as possible to maximize the potential of contact."</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"I get it. But like, you could have told us this from the beginning."</p></div>
+    <p>Claire agrees. You pull up to the Bed &amp; Breakfast, desperate for contact of any kind.</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">How do you approach the investigation?</div>
+    <button class="choice-btn" onclick="goTo('scene-night-prep')">
+      <span class="choice-label">Prepare for the night investigation</span>
+      <span class="choice-text">Gear up. There's only so many hours of darkness.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-daytime-sweep')">
+      <span class="choice-label">Do a daytime sweep first</span>
+      <span class="choice-text">Get a baseline before the night. You arrived early enough.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ COINCIDENCE ═══════════════════════════════════ -->
+<div class="scene" id="scene-coincidence">
+  <div class="chapter-label">Wild Coincidence</div>
+  <div class="scene-text">
+    <p>"I didn't realize it was the same place when we got the call," you say.</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"That's wild."</p></div>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"Are you okay with it? You don't have to do this one."</p></div>
+    <p>"I'm more than okay with it," you say. "I <em>need</em> it."</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"I don't really care what else is here. We gotta find Brian."</p><p><span class="speaker">Claire</span>"Ryan."</p></div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">Ready to go in?</div>
+    <button class="choice-btn" onclick="goTo('scene-night-prep')">
+      <span class="choice-label">Prepare for the night investigation</span>
+      <span class="choice-text">It's getting dark. Time to gear up.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-daytime-sweep')">
+      <span class="choice-label">Do a daytime sweep first</span>
+      <span class="choice-text">Get a baseline while there's still light.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ LIE ALIVE (BAD END) ═══════════════════════════════════ -->
+<div class="scene" id="scene-lie-alive">
+  <div class="chapter-label">Kicked Out</div>
+  <div class="scene-text bad-ending-text">
+    <p>At first they laugh. Then they don't know what to think.</p>
+    <p>"He is still alive," you say. "You've met him!"</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"Huh?"</p></div>
+    <p>"I was kidding about the whole dead husband thing."</p>
+    <p><em>They decided to kick you out of I-55 Paranormal.</em></p>
+  </div>
+  <div class="signup-section">
+    <div class="signup-eyebrow">Bad Ending</div>
+    <div class="signup-headline">That Went Poorly</div>
+    <div class="signup-body">Honesty might have opened the door. The real story of what waits at the Bed &amp; Breakfast is out there.</div>
+    <a class="signup-btn" href="https://mailchi.mp/ea36527c3cc0/7dxl68bx76" target="_blank">Notify Me When It's Published</a>
+    <button class="restart-btn" onclick="restart()">↩ Try again</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ KEEP SECRET ═══════════════════════════════════ -->
+<div class="scene" id="scene-keep-secret">
+  <div class="chapter-label">The Lie</div>
+  <div class="scene-text">
+    <div class="dialogue"><p><span class="speaker">Joey</span>"You seem deep in thought."</p></div>
+    <p>"It's nothing."</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"What have you heard about this place we're headed?"</p></div>
+    <p>"Uh—" you collect your thoughts, your lies. "It's believed to be a hotbed of activity. Cold spots, hot spots, shadow people. Some of the best EVPs anyone has ever heard."</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"You have examples?"</p></div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you say?</div>
+    <button class="choice-btn" onclick="goTo('scene-make-up')">
+      <span class="choice-label">Make up a famous example</span>
+      <span class="choice-text">"It's pretty famous in these parts. The Springfield Sounder."</span>
+    </button>
+    <button class="choice-btn bad-end" onclick="goTo('scene-forgot-it')">
+      <span class="choice-label">Tell them you forgot to bring it</span>
+      <span class="choice-text">You blank. "I... forgot to bring it."</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAKE UP EXAMPLE ═══════════════════════════════════ -->
+<div class="scene" id="scene-make-up">
+  <div class="chapter-label">The Springfield Sounder</div>
+  <div class="scene-text">
+    <p>"It's pretty famous in these parts," you lie. "The Springfield Sounder."</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"Why have I never heard of this?"</p><p><span class="speaker">Claire</span>"What does the Sounder do?"</p></div>
+    <p>"So much chatter—through every device. We need to be listening to everything!"</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"This could be the most activity we've faced yet."</p></div>
+    <p>Is it time to tell them the truth?</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-tell-crew')">
+      <span class="choice-label">Tell your crew about Ryan's death</span>
+      <span class="choice-text">You can't keep lying. Not tonight of all nights.</span>
+    </button>
+    <button class="choice-btn bad-end" onclick="goTo('scene-stick-lie')">
+      <span class="choice-label">Stick with the lie</span>
+      <span class="choice-text">You're in too deep now. Keep going.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ STICK WITH LIE (BAD END PATH) ═══════════════════════════════════ -->
+<div class="scene" id="scene-stick-lie">
+  <div class="chapter-label">Things Fall Apart</div>
+  <div class="scene-text">
+    <p>You aren't sure how to look for Ryan while making it look like a normal hunt. It's too personal. Claire and Joey start arguing over whether they believe you.</p>
+    <p>It gets heated. I-55 Paranormal pulls the plug on this investigation.</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">Now what?</div>
+    <button class="choice-btn" onclick="goTo('scene-mac-call')">
+      <span class="choice-label">Call M.A.C.—the nationally televised team</span>
+      <span class="choice-text">If the pros can help, why not ask?</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-alone-drive')">
+      <span class="choice-label">Take on the Bed &amp; Breakfast alone</span>
+      <span class="choice-text">Fine. You'll do it yourself.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-one-more-first')">
+      <span class="choice-label">One more hunt before Ryan</span>
+      <span class="choice-text">Reset. Go back out. Try again.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ FORGOT IT (BAD END) ═══════════════════════════════════ -->
+<div class="scene" id="scene-forgot-it">
+  <div class="chapter-label">Performance Plan</div>
+  <div class="scene-text bad-ending-text">
+    <p>Claire and Joey are so disappointed in you that they put you on a performance plan to prove you belong on the team and have suspended you from tonight's investigation.</p>
+    <p><em>You blew it.</em></p>
+  </div>
+  <div class="signup-section">
+    <div class="signup-eyebrow">Bad Ending</div>
+    <div class="signup-headline">Performance Plan</div>
+    <div class="signup-body">She was so close. The real story—what really happened at that B&amp;B—is coming soon.</div>
+    <a class="signup-btn" href="https://mailchi.mp/ea36527c3cc0/7dxl68bx76" target="_blank">Notify Me When It's Published</a>
+    <button class="restart-btn" onclick="restart()">↩ Try again</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ M.A.C. CALL ═══════════════════════════════════ -->
+<div class="scene" id="scene-mac-call">
+  <div class="chapter-label">Midwest Anomaly Coalition</div>
+  <div class="scene-text">
+    <p>For good reason, you call the pros. <strong>M.A.C.</strong>—Midwest Anomaly Coalition. Local, known, trusted. Nationally televised and well funded. If Ryan or anything else is at that B&amp;B, M.A.C. would document it.</p>
+    <p>You look up their website and click call.</p>
+    <p><em>Ringing. Ringing.</em></p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-mac-hangup')">
+      <span class="choice-label">Hang up</span>
+      <span class="choice-text">What are you even doing? Do you really want to make finding Ryan a made-for-TV spectacle?</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-mac-ring')">
+      <span class="choice-label">Let it ring</span>
+      <span class="choice-text">Someone will answer. Hopefully.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAC HANG UP ═══════════════════════════════════ -->
+<div class="scene" id="scene-mac-hangup">
+  <div class="chapter-label">End Call</div>
+  <div class="scene-text">
+    <p>What are you even doing? Do you think Johnny Spooks and the crew would actually come help you out? Do you really want to make finding Ryan a made-for-TV spectacle?</p>
+    <p>You end the call.</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What now?</div>
+    <button class="choice-btn" onclick="goTo('scene-alone-drive')">
+      <span class="choice-label">Go alone</span>
+      <span class="choice-text">Just you and the B&amp;B. No cameras.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-one-more-first')">
+      <span class="choice-label">One more hunt first</span>
+      <span class="choice-text">Get some more practice before the big one.</span>
+    </button>
+    <button class="choice-btn retire-end" onclick="goTo('scene-retire')">
+      <span class="choice-label">Retire from ghost hunting</span>
+      <span class="choice-text">Maybe this isn't the answer.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAC RING / VOICEMAIL ═══════════════════════════════════ -->
+<div class="scene" id="scene-mac-ring">
+  <div class="chapter-label">Voicemail</div>
+  <div class="scene-text">
+    <p><em>Ringing.</em></p>
+    <p>"Hello, you have reached the Midwest Anomaly Coalition. We are out of the office at the moment—no doubt killing it somewhere finding the dead. If you are looking to hire us, leave your name and number after the beep."</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-mac-hangup')">
+      <span class="choice-label">Hang up</span>
+      <span class="choice-text">Forget it.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-mac-message')">
+      <span class="choice-label">Leave a message</span>
+      <span class="choice-text">It's worth a shot.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-alone-drive')">
+      <span class="choice-label">Go alone anyway</span>
+      <span class="choice-text">You're not waiting for a callback.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAC MESSAGE ═══════════════════════════════════ -->
+<div class="scene" id="scene-mac-message">
+  <div class="chapter-label">After the Beep</div>
+  <div class="scene-text">
+    <p><em>Beep.</em></p>
+    <p>"Hey M.A.C., I'm a member of the I-55 Paranormal group in Illinois and I need some assistance on a special case. I believe my husband's ghost is there. Please call me back."</p>
+    <p>You leave your number and hang up. How long should you wait?</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">How long do you wait?</div>
+    <button class="choice-btn" onclick="goTo('scene-mac-no-call')">
+      <span class="choice-label">One hour</span>
+      <span class="choice-text">Surely they check messages often.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-mac-no-call')">
+      <span class="choice-label">One day</span>
+      <span class="choice-text">Give them a business day.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-mac-no-call')">
+      <span class="choice-label">One month</span>
+      <span class="choice-text">They must be very busy.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-mac-no-call')">
+      <span class="choice-label">One year</span>
+      <span class="choice-text">Patience is a virtue.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-mac-two-years')">
+      <span class="choice-label">Two years</span>
+      <span class="choice-text">You are a patient woman.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAC NO CALL ═══════════════════════════════════ -->
+<div class="scene" id="scene-mac-no-call">
+  <div class="chapter-label">Nothing</div>
+  <div class="scene-text">
+    <p>They don't call you back.</p>
+    <p><em>Of course not.</em></p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What now?</div>
+    <button class="choice-btn" onclick="goTo('scene-crew-drive')">
+      <span class="choice-label">Gather the I-55 team</span>
+      <span class="choice-text">Go back to your people.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-one-more-first')">
+      <span class="choice-label">One more hunt first</span>
+      <span class="choice-text">You're not ready yet. One more night.</span>
+    </button>
+    <button class="choice-btn retire-end" onclick="goTo('scene-retire')">
+      <span class="choice-label">Retire from ghost hunting</span>
+      <span class="choice-text">Maybe it's time to let go.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ MAC TWO YEARS ═══════════════════════════════════ -->
+<div class="scene" id="scene-mac-two-years">
+  <div class="chapter-label">Two Years Later</div>
+  <div class="scene-text">
+    <p><em>Ringing.</em></p>
+    <p>Unknown caller.</p>
+    <p>"Hello?"</p>
+    <p>"Hey, this is Johnny's mom. Johnny was arrested for marijuana possession and the show got shut down. I've been working through all the voicemails."</p>
+    <div class="dialogue"><p><span class="speaker">You</span>"What about the rest of M.A.C.?"</p></div>
+    <p>"Two were arrested as well. The fourth member became a Senator and doesn't do this sort of thing anymore. I'm sorry dear—did you search for your husband yourself?"</p>
+    <div class="dialogue"><p><span class="speaker">You</span>"No. I don't know if I can go it alone."</p></div>
+    <p>"Good."</p>
+    <p>She ended the call.</p>
+    <p><em>WTF?</em></p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What now?</div>
+    <button class="choice-btn" onclick="goTo('scene-crew-drive')">
+      <span class="choice-label">Gather the I-55 team</span>
+      <span class="choice-text">Back to the people who actually showed up for you.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-one-more-first')">
+      <span class="choice-label">One more hunt first</span>
+      <span class="choice-text">You're not ready for Ryan yet. One more night.</span>
+    </button>
+    <button class="choice-btn retire-end" onclick="goTo('scene-retire')">
+      <span class="choice-label">Retire from ghost hunting</span>
+      <span class="choice-text">Two years was too long. Let it go.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ RETIRE (ENDING) ═══════════════════════════════════ -->
+<div class="scene" id="scene-retire">
+  <div class="chapter-label">The End</div>
+  <div class="scene-text bad-ending-text">
+    <p>You decide that reaching out to make contact with your deceased husband is a false hope. Better to leave him alone. You're confident he has passed on.</p>
+    <p>Confident he is fine.</p>
+  </div>
+  <div class="signup-section">
+    <div class="signup-eyebrow">Ending: Retirement</div>
+    <div class="signup-headline">He's Not Fine.</div>
+    <div class="signup-body">The full story of what waits at that Bed &amp; Breakfast—and what really happened to Ryan—is coming soon.</div>
+    <a class="signup-btn" href="https://mailchi.mp/ea36527c3cc0/7dxl68bx76" target="_blank">Notify Me When It's Published</a>
+    <button class="restart-btn" onclick="restart()">↩ Try again</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ ONE MORE HUNT (ENTRY) ═══════════════════════════════════ -->
+<div class="scene" id="scene-one-more-first">
+  <div class="chapter-label">One More Night</div>
+  <div class="scene-text">
+    <p>Not yet. You need one more investigation under your belt. One more chance to prove to yourself that you're ready for what might come when you face Ryan's last known location.</p>
+    <p>A new case comes in.</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">Head to the investigation</div>
+    <button class="choice-btn" onclick="startOneMoreHunt('first')">
+      <span class="choice-label">Answer the call</span>
+      <span class="choice-text">I-55 Paranormal has a new case. Time to gear up.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ HUNT SCENE (DYNAMIC) ═══════════════════════════════════ -->
+<div class="scene" id="scene-hunt">
+  <div class="chapter-label" id="hunt-label">Investigation</div>
+  <img id="hunt-house-img" class="hunt-house-img" src="" alt="Haunted house" style="display:none">
+  <div class="scene-text" id="hunt-intro-text"></div>
+
+  <div class="tool-section">
+    <div class="tool-section-label">Select 3 tools for tonight's investigation</div>
+    <div class="tool-grid" id="tool-grid"></div>
+    <div class="tool-count">Selected: <span id="tool-count">0</span> / 3</div>
+    <button class="enter-btn" id="enter-btn" disabled onclick="enterHouse()">▶ Enter the house</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ HUNT NIGHT ═══════════════════════════════════ -->
+<div class="scene" id="scene-hunt-night">
+  <div class="chapter-label" id="night-label">Investigation—Night</div>
+  <div class="scene-text" id="night-intro-text"></div>
+  <div class="choices">
+    <div class="choices-prompt">The night wears on</div>
+    <button class="choice-btn" onclick="showLateNight()">
+      <span class="choice-label">Continue the investigation</span>
+      <span class="choice-text">Keep your eyes open. The toolbar is running.</span>
+    </button>
+  </div>
+</div>
+
+<div class="scene" id="scene-hunt-late">
+  <div class="chapter-label" id="late-label">Investigation—Late Night</div>
+  <div class="scene-text" id="late-night-text"></div>
+  <div class="choices">
+    <div class="choices-prompt">End of the night</div>
+    <button class="choice-btn" onclick="showEndNight()">
+      <span class="choice-label">Review all evidence</span>
+      <span class="choice-text">Dawn is coming. Time to see what you captured.</span>
+    </button>
+  </div>
+</div>
+
+<div class="scene" id="scene-hunt-end">
+  <div class="chapter-label">Evidence Review</div>
+  <div class="scene-text"></div>
+  <div id="end-evidence-panel"></div>
+  <div class="tool-section" id="conclusion-section">
+    <div class="tool-section-label">Submit your conclusion to the client</div>
+    <div class="conclusion-grid" id="conclusion-grid"></div>
+  </div>
+</div>
+
+<div class="scene" id="scene-hunt-done">
+  <div class="chapter-label">Case Closed</div>
+  <div class="scene-text" id="hunt-done-text"></div>
+  <div class="choices">
+    <div class="choices-prompt">What next?</div>
+    <button class="choice-btn" onclick="goTo('scene-crew-drive')">
+      <span class="choice-label">Head to the Bed &amp; Breakfast with your crew</span>
+      <span class="choice-text">You're ready. Time to find Ryan.</span>
+    </button>
+    <button class="choice-btn retire-end" onclick="goTo('scene-retire')">
+      <span class="choice-label">Retire from ghost hunting</span>
+      <span class="choice-text">You've seen enough.</span>
+    </button>
+    <button class="choice-btn" id="one-more-btn" onclick="goTo('scene-one-more-first')" style="display:none">
+      <span class="choice-label">One more hunt before Ryan</span>
+      <span class="choice-text">You're not ready yet. One more case.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ DAYTIME SWEEP ═══════════════════════════════════ -->
+<div class="scene" id="scene-daytime-sweep">
+  <div class="chapter-label">Room 300</div>
+  <div class="scene-text">
+    <p>You all decide to sweep the location with gear to get a baseline. Then if anything is different tonight, you'll know it's real. Joey and Claire took the MEL Meters to the second floor.</p>
+    <p>You took your EVP recorder to the third floor, room 300. It's not where Ryan died—but it's where he last slept as a living, breathing person.</p>
+    <p>It looked like any other rural Illinois B&amp;B bedroom. You sit on the edge of the bed and close your eyes.</p>
+    <p><em>Click.</em> You hit record.</p>
+    <p>"Ryan, honey," you whisper. "Are you still here?"</p>
+    <p>Silence.</p>
+    <p>"It's me, baby." You say through tears.</p>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-check-recording')">
+      <span class="choice-label">Check the recording</span>
+      <span class="choice-text">Hold it up to your ear. Play it back.</span>
+    </button>
+    <button class="choice-btn bad-end" onclick="goTo('scene-ignore-recording')">
+      <span class="choice-label">Ignore the recording</span>
+      <span class="choice-text">Too scared to even check. What are you even doing here?</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-return-crew')">
+      <span class="choice-label">Return to the rest of the crew</span>
+      <span class="choice-text">You'll check it later. Maybe.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ CHECK RECORDING ═══════════════════════════════════ -->
+<div class="scene" id="scene-check-recording">
+  <div class="chapter-label">Playback</div>
+  <div class="scene-text" id="recording-text">
+    <p>You stand up from the edge of the bed and play back the recorder.</p>
+    <p>First you hear yourself: <em>"Ryan, honey. Are you still here?"</em></p>
+    <p>You think you almost hear something after that. Faint. Maybe nothing.</p>
+    <p>Turning up the volume and holding the device to your ear, you replay it.</p>
+    <p><em>"Ryan, honey. Are you still here?"</em></p>
+    <p id="evp-reveal" style="opacity:0; transition: opacity 1.5s ease; font-size: 1.4rem; color: var(--cyan); text-align: center; padding: 1rem;"><em>*unclear*</em></p>
+    <p>You play it again, louder still.</p>
+    <p><em>"Ryan, honey. Are you still here?"</em></p>
+    <p id="evp-reveal2" style="opacity:0; transition: opacity 1.5s ease; font-size: 1.6rem; color: var(--cyan); text-align: center; padding: 1rem; text-shadow: 0 0 20px var(--cyan-glow);">Yes</p>
+    <p id="evp-drop" style="opacity:0; transition: opacity 1s ease;">The recorder drops to the carpeted floor and your other hand flies to your open mouth.</p>
+    <p id="evp-contact" style="opacity:0; transition: opacity 1s ease;"><strong>Contact.</strong></p>
+  </div>
+  <div class="choices" id="recording-choice" style="display:none">
+    <div class="choices-prompt">What now?</div>
+    <button class="choice-btn" onclick="goTo('scene-return-crew')">
+      <span class="choice-label">Return to the rest of the crew</span>
+      <span class="choice-text">They need to know what you just heard.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ IGNORE RECORDING ═══════════════════════════════════ -->
+<div class="scene" id="scene-ignore-recording">
+  <div class="chapter-label">Deleted</div>
+  <div class="scene-text bad-ending-text">
+    <p>You look down at the recorder.</p>
+    <p>Too scared to even check.</p>
+    <p>What are you even doing?</p>
+    <p>Would making contact bring healing?</p>
+    <p>Would making contact keep him from peace?</p>
+    <p><em>Deleted.</em></p>
+    <p>Headed back to the vehicle.</p>
+    <p>Done ghost hunting.</p>
+    <p>Moving on.</p>
+    <p>Without him.</p>
+  </div>
+  <div class="signup-section">
+    <div class="signup-eyebrow">Ending: She Walked Away</div>
+    <div class="signup-headline">She Would Never Give Up on Ryan.</div>
+    <div class="signup-body">The real story—and what was on that recording—is coming soon. Be first to know.</div>
+    <a class="signup-btn" href="https://mailchi.mp/ea36527c3cc0/7dxl68bx76" target="_blank">Notify Me When It's Published</a>
+    <button class="restart-btn" onclick="restart()">↩ Try again</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ RETURN TO CREW ═══════════════════════════════════ -->
+<div class="scene" id="scene-return-crew">
+  <div class="chapter-label">Living Room</div>
+  <div class="scene-text">
+    <p>You rush down the stairs to find Claire and Joey in the B&amp;B living room.</p>
+    <div class="dialogue"><p><span class="speaker">Joey</span>"Anything good?"</p></div>
+    <p>"He's here."</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"We think so too."</p></div>
+    <p>But her smile is long gone.</p>
+    <p>"What is it?" you ask.</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"He's not alone."</p></div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-night-prep')">
+      <span class="choice-label">Prepare for the night investigation</span>
+      <span class="choice-text">You know what you need to do. Gear up.</span>
+    </button>
+    <button class="choice-btn" onclick="goTo('scene-dig-deeper')">
+      <span class="choice-label">Dig deeper—what do they mean?</span>
+      <span class="choice-text">"What do you mean, not alone?"</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ DIG DEEPER ═══════════════════════════════════ -->
+<div class="scene" id="scene-dig-deeper">
+  <div class="chapter-label">Something Else</div>
+  <div class="scene-text">
+    <p>"What do you mean?" you ask. Claire and Joey look at each other. Faces serious. Whispering now.</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"The MEL meter was all over the place for a daytime sweep."</p><p><span class="speaker">Joey</span>"And I felt cold spots."</p></div>
+    <p>"But that could be Ryan, right?"</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"It can... but Joey got an EVP of something that sounded—"</p></div>
+    <p>"Sounded like what?!"</p>
+    <div class="dialogue"><p><span class="speaker">Claire</span>"Inhuman."</p></div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">What do you do?</div>
+    <button class="choice-btn" onclick="goTo('scene-night-prep')">
+      <span class="choice-label">Prepare for the night investigation</span>
+      <span class="choice-text">Knowing this, you go in with your eyes open.</span>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ NIGHT PREP (FINAL INVESTIGATION) ═══════════════════════════════════ -->
+<div class="scene" id="scene-night-prep">
+  <div class="chapter-label">The Bed &amp; Breakfast</div>
+  <div class="scene-text">
+    <img src="https://outsideoftime2.github.io/Station-Press-Arcade/b%26b.jpg" alt="The Bed and Breakfast" class="hunt-house-img">
+    <p>It is finally time.</p>
+    <p>You've done many ghost hunts before. But this one hits different. It feels like there are real stakes.</p>
+    <p>A Bed &amp; Breakfast at night. Wind across the parking lot. Lights off in every room.</p>
+    <p>You have one night to investigate the grounds where your husband Ryan died.</p>
+    <p><em>Can you find him?</em></p>
+  </div>
+  <div class="tool-section">
+    <div class="tool-section-label">Select 3 tools for the investigation—choose wisely</div>
+    <div class="tool-grid" id="final-tool-grid"></div>
+    <div class="tool-count">Selected: <span id="final-tool-count">0</span> / 3</div>
+    <button class="enter-btn" id="final-enter-btn" disabled onclick="enterFinalHouse()">▶ Enter the house</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════ FINAL NIGHT ═══════════════════════════════════ -->
+<div class="scene" id="scene-final-night">
+  <div class="chapter-label">Night Investigation</div>
+  <div class="scene-text">
+    <div class="dialogue">
+      <p><span class="speaker">Claire</span>"There has to be more than one spirit here."</p>
+      <p><span class="speaker">Joey</span>"We should reach out. I'm thinking 100 candles."</p>
+      <p><span class="speaker">Claire</span>"We don't have 100 candles."</p>
+    </div>
+    <div class="dialogue">
+      <p><span class="speaker">You</span>"Did you ask how many paranormal groups have come through here?"</p>
+      <p><span class="speaker">Claire</span>"We aren't the first."</p>
+      <p><span class="speaker">You</span>"Seems like something was drawn here."</p>
+      <p><span class="speaker">Joey</span>"It does."</p>
+    </div>
+  </div>
+  <div class="choices">
+    <div class="choices-prompt">The night wears on</div>
+    <button class="choice-btn" onclick="showFinalLateNight()">
+      <span class="choice-label">Continue the investigation</span>
+      <span class="choice-text">Keep your eyes open. The toolbar is running.</span>
+    </button>
+  </div>
+</div>
+
+<div class="scene" id="scene-final-late">
+  <div class="chapter-label">Night Investigation—Late</div>
+  <div class="scene-text">
+    <div class="dialogue"><p><span class="speaker">You</span>"Where's Joey?"</p><p><span class="speaker">Claire</span>"Maybe he went to the basement."</p><p><span class="speaker">You</span>"I don't think there is one."</p></div>
+    <p id="scream-text" style="font-style:italic; color: var(--red); opacity:0; transition: opacity 1s ease;">[A man screams from somewhere in the house]</p>
+    <p id="kitchen-text" style="opacity:0; transition: opacity 1s ease;">"That sounds like it was in the kitchen," you say. "Where Ryan died."</p>
+    <p id="tap-text" style="opacity:0; transition: opacity 1.5s ease;">You and Claire rush into the kitchen. All the cabinet doors and drawers are pulled open. No Joey.</p>
+    <p id="ryan-text" style="opacity:0; transition: opacity 1.5s ease; font-size: 1.2rem; color: var(--cyan); text-align: center;">Tap. You felt it on your shoulder. Soft.</p>
+    <p id="ryan-q" style="opacity:0; transition: opacity 1.5s ease; font-size: 1.4rem; text-align: center; color: var(--white); text-shadow: 0 0 20px var(--cyan-glow);">"Ryan?"</p>
+    <p id="run-text" style="opacity:0; transition: opacity 1s ease; color: var(--red); font-style: italic; font-size: 1.3rem; text-align: center; letter-spacing: 0.1em;">Run</p>
+    <p id="voice-text" style="opacity:0; transition: opacity 1s ease;">"Did you hear that?" you ask Claire. "A voice?"</p>
+  </div>
+  <div class="choices" id="final-continue">
+    <div class="choices-prompt">End of night</div>
+    <button class="choice-btn" onclick="showFinalEndNight()" id="final-continue-btn" style="display:none">
+      <span class="choice-label">Review all evidence</span>
+      <span class="choice-text">Dawn is coming. Time to see what you captured.</span>
+    </button>
+  </div>
+</div>
+
+<div class="scene" id="scene-final-end">
+  <div class="chapter-label">Evidence Review</div>
+  <div id="final-end-panel"></div>
+  <div class="signup-section" id="final-signup">
+    <div class="signup-eyebrow">Coming Soon from Station Press</div>
+    <div class="signup-headline" id="final-headline">What Really Happened?</div>
+    <div class="signup-body" id="final-body">The full story of what happened at the Bed &amp; Breakfast—and what became of Ryan—is coming soon.</div>
+    <a class="signup-btn" href="https://mailchi.mp/ea36527c3cc0/7dxl68bx76" target="_blank" id="final-cta">Notify Me When It's Published</a>
+    <button class="restart-btn" onclick="restart()">↩ Start over</button>
+  </div>
+</div>
+
+<footer class="game-footer">
+  Station Press &nbsp;·&nbsp; stationpressbooks.com
+</footer>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+const state = {
+  selectedTools: [],
+  finalTools: [],
+  huntCase: null,
+  huntCount: 0,
+};
+
+// ════════════════════════════════════════════════════════════
+// TOOLS
+// ════════════════════════════════════════════════════════════
+const TOOLS = [
+  { id: 'camera4k',   icon: '📷', name: '4K Camera',       desc: 'Full-spectrum night vision' },
+  { id: 'mel',        icon: '📡', name: 'MEL Meter',        desc: 'EMF + temperature' },
+  { id: 'evp',        icon: '🎙️', name: 'EVP Recorder',     desc: 'Disembodied voices' },
+  { id: 'spiritbox',  icon: '📻', name: 'Spirit Box',       desc: 'Radio frequency scan' },
+  { id: 'boobuddy',   icon: '🐻', name: 'Boo Buddy',        desc: 'Asks EVP questions' },
+  { id: 'laser',      icon: '🔴', name: 'Laser Grid',       desc: 'Detects movement in light' },
+  { id: 'sensor360',  icon: '🌈', name: '360 Sensor',       desc: 'Rainbow proximity lights' },
+  { id: 'flir',       icon: '🌡️', name: 'FLIR Camera',      desc: 'Thermal imaging' },
+  { id: 'catballs',   icon: '⚪', name: 'Cat Balls',         desc: 'Motion-triggered lights' },
+  { id: 'sls',        icon: '🖼️', name: 'SLS Camera',       desc: 'Structured light sensor' },
+  { id: 'rempod',     icon: '📶', name: 'REM Pod',          desc: 'Electromagnetic field' },
+  { id: 'ovilus',     icon: '🔤', name: 'Ovilus',           desc: 'Environmental word reader' },
+];
+
+// What each entity type triggers
+const ENTITY_TRIGGERS = {
+  residual:       ['mel', 'evp', 'boobuddy', 'rempod', 'camera4k'],
+  cold_spots:     ['mel', 'flir'],
+  orbs:           ['camera4k', 'laser', 'sensor360', 'rempod'],
+  shadow_person:  ['camera4k', 'boobuddy', 'laser', 'sensor360', 'catballs', 'sls', 'rempod'],
+  poltergeist:    ['mel', 'sensor360', 'rempod'],
+  haunted_object: ['camera4k', 'mel', 'flir'],
+  human_ghost:    ['mel', 'evp', 'spiritbox', 'boobuddy', 'laser', 'sensor360', 'flir', 'catballs', 'sls', 'rempod'],
+  demon:          ['camera4k', 'mel', 'evp', 'spiritbox', 'boobuddy', 'sensor360', 'flir', 'catballs', 'sls', 'rempod'],
+};
+
+// Hunt cases: [label, subtitle, entity, mid-text, late-text, conclusions]
+const HUNT_CASES = [
+  {
+    id: 'rocking',
+    label: 'Case: Cold Spots &amp; Apparition',
+    subtitle: 'Client reports cold spots and an apparition of a woman in a rocking chair.',
+    entity: ['residual', 'cold_spots'],
+    midText: `<div class="dialogue"><p><span class="speaker">You</span>"Seems pretty quiet."</p><p><span class="speaker">Joey</span>"You aren't getting much either?"</p><p><span class="speaker">You</span>"No."</p></div><p>"Wait," Joey says. "Do you feel that?"</p><p>"Is it colder than usual?" you ask.</p>`,
+    lateText: `<p>"Do you hear that?" you ask.</p><p><em>[A rocking chair creaks rhythmically from the next room]</em></p><div class="dialogue"><p><span class="speaker">Claire</span>"Whoa."</p><p><span class="speaker">Joey</span>"Can anyone catch grandma on anything?"</p></div>`,
+    conclusions: ['Haunted—Cold spots confirmed', 'Haunted—Residual confirmed', 'Haunted—Both', 'Not Haunted'],
+  },
+  {
+    id: 'shadow',
+    label: 'Case: Shadow Person',
+    subtitle: 'Client claims to see a seven-foot-tall shadow person in the hallway.',
+    entity: ['shadow_person'],
+    midText: `<div class="dialogue"><p><span class="speaker">Joey</span>"What even is a shadow person?"</p><p><span class="speaker">Claire</span>"Some think it's just a ghost, others an interdimensional being, others say they are pure evil."</p><p><span class="speaker">You</span>"Who says they are pure evil?"</p><p><span class="speaker">Claire</span>"Many mediums say they can't be removed no matter what they try."</p></div>`,
+    lateText: `<p>"If shadow people are just ghosts, why look so much darker?" you ask.</p><div class="dialogue"><p><span class="speaker">Claire</span>"Maybe they are half people."</p><p><span class="speaker">Joey</span>"Half people? You been reading <em>Don't Let Them</em> or something?"</p><p><span class="speaker">Claire</span>"Hey!"</p></div><p>You turn. Something enormous in the corner of the room. Then—<em>[three slow knocks on the wall]</em></p>`,
+    conclusions: ['Haunted—Shadow person confirmed', 'Haunted—Ghost confirmed', 'Haunted—Demon confirmed', 'Not Haunted'],
+  },
+  {
+    id: 'orbs',
+    label: 'Case: Orbs',
+    subtitle: 'Clients report seeing orbs throughout the house.',
+    entity: ['orbs'],
+    midText: `<div class="dialogue"><p><span class="speaker">Joey</span>"Did we really take a case for just orbs? This will never get us our own show."</p><p><span class="speaker">Claire</span>"Shut it, Joey."</p><p><span class="speaker">You</span>"Shhh! Do you hear that?"</p><p><span class="speaker">Claire</span>"No."</p></div>`,
+    lateText: `<div class="dialogue"><p><span class="speaker">Joey</span>"I swear I just saw something blue floating in the corner of my eye."</p><p><span class="speaker">You</span>"An orb?"</p><p><span class="speaker">Joey</span>"Possibly."</p><p><span class="speaker">Claire</span>"We'll need evidence."</p></div><p><em>[A floorboard creaks somewhere above you]</em></p>`,
+    conclusions: ['Haunted—Orbs confirmed', 'Haunted—Other', 'Not Haunted'],
+  },
+  {
+    id: 'evil',
+    label: 'Case: Evil Spirit',
+    subtitle: 'Clients are worried an evil spirit has taken over their home.',
+    entity: ['demon'],
+    midText: `<div class="dialogue"><p><span class="speaker">You</span>"Have you all come across a demon before?"</p><p><span class="speaker">Claire</span>"I don't know if they're much different than shadow people."</p><p><span class="speaker">Joey</span>"My brother Phil came across one and it messed him up."</p><p><span class="speaker">Claire</span>"Sounds made up."</p></div>`,
+    lateText: `<p><em>[Knock. Knock. Knock.]</em></p><p>"Uh?" <em>[Knock. Knock.]</em></p><p>"Hello?" <em>[Glass shattering somewhere upstairs]</em></p><div class="dialogue"><p><span class="speaker">Joey</span>"Anyone have eyes on it?"</p><p><span class="speaker">Claire</span>"The power is out!"</p></div>`,
+    conclusions: ['Haunted—Shadow person confirmed', 'Haunted—Ghost confirmed', 'Haunted—Demon confirmed', 'Haunted—All of the above', 'Not Haunted'],
+  },
+  {
+    id: 'voices',
+    label: 'Case: Disembodied Voices',
+    subtitle: 'Reports of disembodied voices and moving objects throughout the house.',
+    entity: ['human_ghost', 'poltergeist'],
+    midText: `<div class="dialogue"><p><span class="speaker">Claire</span>"This place freaks me out. It's darker than most."</p></div><p><em>[Low, quiet laughter from somewhere in the house]</em></p><div class="dialogue"><p><span class="speaker">Joey</span>"Are we sure there isn't something sinister here?"</p></div><p>You check your arm for goosebumps.</p>`,
+    lateText: `<div class="dialogue"><p><span class="speaker">You</span>"We should have brought gear for the Estes method."</p><p><span class="speaker">Claire</span>"I'm not sure this is the best case for that."</p><p><span class="speaker">Joey</span>"Do we even have that kind of gear?"</p><p><span class="speaker">You</span>"It's just a blindfold and headphones in the spirit box."</p></div><p><em>[A floorboard creaks. A door that was definitely closed swings open.]</em></p><div class="dialogue"><p><span class="speaker">Claire</span>"Guys. Did we leave that door open?"</p><p><span class="speaker">Joey</span>"Definitely not."</p></div>`,
+    conclusions: ['Haunted—Poltergeist', 'Haunted—Ghost', 'Haunted—Demon', 'Not Haunted'],
+  },
+  {
+    id: 'feeling',
+    label: 'Case: Strange Activity',
+    subtitle: "Clients haven't seen anything—it's only a feeling.",
+    entity: ['haunted_object'],
+    midText: `<div class="dialogue"><p><span class="speaker">You</span>"I'm not sure what I'm looking for here."</p><p><span class="speaker">Claire</span>"A little bit of everything."</p></div><p><em>[A floorboard creaks]</em></p><div class="dialogue"><p><span class="speaker">Joey</span>"I think that was me."</p></div>`,
+    lateText: `<div class="dialogue"><p><span class="speaker">Joey</span>"Do you think it could be that odd looking mask on the wall? Maybe the mask is haunted."</p><p><span class="speaker">Claire</span>"Based on what?"</p></div><p>Suddenly, the mask fell off the wall and crashed to the floor.</p><div class="dialogue"><p><span class="speaker">You</span>"Don't touch it."</p></div>`,
+    conclusions: ['Haunted—Haunted object', 'Haunted—Ghost confirmed', 'Haunted—Both', 'Not Haunted'],
+  },
+];
+
+// ════════════════════════════════════════════════════════════
+// ASSETS
+// ════════════════════════════════════════════════════════════
+const BASE_URL = 'https://outsideoftime2.github.io/Station-Press-Arcade/';
+
+// One image per hunt case id
+const CASE_IMAGES = {
+  rocking: 'oldwomanghost.png',
+  shadow:  'shadowman.png',
+  orbs:    'orb.png',
+  evil:    'demonpic.jpg',
+  voices:  null,         // audio only — ghost sound
+  feeling: 'glowingmask.png',
+};
+// SLS image for non-BB cases
+const CASE_SLS_IMAGES = {
+  shadow:  'singleSLS.jpg',
+  evil:    'singleSLS.jpg',
+  voices:  'singleSLS.jpg',
+};
+
+// Haunted house images (hh1–hh8) assigned randomly per case
+const HOUSE_IMAGES = {
+  rocking: 'hh1.jpg',
+  shadow:  'hh2.jpg',
+  orbs:    'hh3.jpg',
+  evil:    'hh4.jpg',
+  voices:  'hh5.jpg',
+  feeling: 'hh6.jpg',
+};
+
+// ════════════════════════════════════════════════════════════
+// AUDIO HELPERS
+// ════════════════════════════════════════════════════════════
+function playSound(id, volume) {
+  try {
+    const el = document.getElementById('snd-' + id);
+    if (!el) return;
+    el.volume = volume !== undefined ? volume : 0.7;
+    el.currentTime = 0;
+    el.play().catch(() => {});
+  } catch(e) {}
+}
+
+function stopSound(id) {
+  try {
+    const el = document.getElementById('snd-' + id);
+    if (el) { el.pause(); el.currentTime = 0; }
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════
+// OVILUS WORD BANK (from the design doc)
+// ════════════════════════════════════════════════════════════
+const OVILUS_WORDS = {
+  identifiers: ['Hello','name','identify','who','I','here'],
+  emotions:    ['scared','angry','hate','hurt','dead','help'],
+  locations:   ['room','floor','attic','wall','outside','down'],
+  nouns:       ['door','light','man','woman','shadow','box'],
+  verbs:       ['run','look','see','stop','go','ask'],
+  rare:        ['dark','murder','devil','blood'],
+};
+const OVILUS_ALL = [
+  ...OVILUS_WORDS.identifiers,
+  ...OVILUS_WORDS.emotions,
+  ...OVILUS_WORDS.locations,
+  ...OVILUS_WORDS.nouns,
+  ...OVILUS_WORDS.verbs,
+];
+function randomOvilusWord(allowRare) {
+  if (allowRare && Math.random() < 0.15) {
+    return OVILUS_WORDS.rare[Math.floor(Math.random() * OVILUS_WORDS.rare.length)];
+  }
+  return OVILUS_ALL[Math.floor(Math.random() * OVILUS_ALL.length)];
+}
+
+// ════════════════════════════════════════════════════════════
+// GEAR BAR
+// ════════════════════════════════════════════════════════════
+let gearTimers = [];
+let gearActive = false;
+
+const TOOL_SOUNDS = {
+  mel:       { sound: 'mel',       interval: [8000, 18000]  },
+  boobuddy:  { sound: 'boobuddy',  interval: [12000, 25000] },
+  rempod:    { sound: 'rempod',    interval: [10000, 22000] },
+  spiritbox: { sound: 'spiritbox', interval: [6000, 14000]  },
+};
+
+// Paused tools set — toggles stop the ambience scheduler from firing
+const pausedTools = new Set();
+
+function toggleGearTool(toolId, trackEl) {
+  const labelEl = document.getElementById('toggle-label-' + toolId);
+  if (pausedTools.has(toolId)) {
+    // Turn ON
+    pausedTools.delete(toolId);
+    if (trackEl) trackEl.classList.add('on');
+    if (labelEl) labelEl.textContent = 'on';
+    startToolAmbience(toolId);
+    if (toolId === 'spiritbox') {
+      const disp = document.getElementById('spirit-display');
+      if (disp) { disp.textContent = '· · ·'; disp.className = 'spirit-scan'; }
+    }
+    if (toolId === 'mel') {
+      const reading = document.getElementById('gear-reading-mel');
+      if (reading) reading.textContent = '--.-°F';
+    }
+  } else {
+    // Turn OFF
+    pausedTools.add(toolId);
+    if (trackEl) trackEl.classList.remove('on');
+    if (labelEl) labelEl.textContent = 'off';
+    stopSound(toolId);
+    if (toolId === 'mel') {
+      const fill = document.getElementById('mel-fill');
+      const reading = document.getElementById('gear-reading-mel');
+      const slot = document.getElementById('gear-slot-mel');
+      if (fill) fill.style.width = '0%';
+      if (reading) reading.textContent = 'OFF';
+      if (slot) slot.classList.remove('pulsing');
+    }
+    if (toolId === 'spiritbox') {
+      const disp = document.getElementById('spirit-display');
+      if (disp) { disp.textContent = 'OFF'; disp.className = 'spirit-scan'; }
+    }
+    if (toolId === 'rempod') {
+      [0,1,2,3].forEach(i => {
+        const l = document.getElementById('rem-' + i);
+        if (l) l.className = 'rem-light';
+      });
+      const slot = document.getElementById('gear-slot-rempod');
+      if (slot) slot.classList.remove('alerting');
+    }
+  }
+}
+
+function startGearBar(tools) {
+  stopGearBar();
+  pausedTools.clear();
+  gearActive = true;
+  document.body.classList.add('gear-active');
+
+  const bar = document.getElementById('gear-bar');
+  bar.innerHTML = '';
+  bar.classList.add('active');
+
+  tools.forEach(toolId => {
+    const tool = TOOLS.find(t => t.id === toolId);
+    if (!tool) return;
+    const slot = document.createElement('div');
+    slot.className = 'gear-slot';
+    slot.id = 'gear-slot-' + toolId;
+
+    if (toolId === 'mel') {
+      slot.innerHTML = `<span class="gear-slot-icon">${tool.icon}</span>
+        <span class="gear-slot-name">${tool.name}</span>
+        <div class="mel-bar"><div class="mel-bar-fill" id="mel-fill"></div></div>
+        <span class="gear-slot-reading" id="gear-reading-mel">--.-°F</span>
+        <div class="gear-toggle">
+          <div class="toggle-track on" id="toggle-mel" onclick="toggleGearTool('mel',this)"><div class="toggle-thumb"></div></div>
+          <span class="toggle-label" id="toggle-label-mel">on</span>
+        </div>`;
+    } else if (toolId === 'rempod') {
+      slot.innerHTML = `<span class="gear-slot-icon">${tool.icon}</span>
+        <span class="gear-slot-name">${tool.name}</span>
+        <div style="margin-top:0.3rem">
+          <span class="rem-light" id="rem-0"></span>
+          <span class="rem-light" id="rem-1"></span>
+          <span class="rem-light" id="rem-2"></span>
+          <span class="rem-light" id="rem-3"></span>
+        </div>
+        <div class="gear-toggle">
+          <div class="toggle-track on" id="toggle-rempod" onclick="toggleGearTool('rempod',this)"><div class="toggle-thumb"></div></div>
+          <span class="toggle-label" id="toggle-label-rempod">on</span>
+        </div>`;
+    } else if (toolId === 'spiritbox') {
+      slot.innerHTML = `<span class="gear-slot-icon">${tool.icon}</span>
+        <span class="gear-slot-name">${tool.name}</span>
+        <span class="spirit-scan" id="spirit-display">· · ·</span>
+        <div class="gear-toggle">
+          <div class="toggle-track on" id="toggle-spiritbox" onclick="toggleGearTool('spiritbox',this)"><div class="toggle-thumb"></div></div>
+          <span class="toggle-label" id="toggle-label-spiritbox">on</span>
+        </div>`;
+    } else if (toolId === 'ovilus') {
+      slot.innerHTML = `<span class="gear-slot-icon">${tool.icon}</span>
+        <span class="gear-slot-name">${tool.name}</span>
+        <span class="ovilus-word" id="ovilus-display">···</span>`;
+    } else {
+      slot.innerHTML = `<span class="gear-slot-icon">${tool.icon}</span>
+        <span class="gear-slot-name">${tool.name}</span>
+        <span class="gear-slot-reading" id="gear-reading-${toolId}"> </span>`;
+    }
+
+    bar.appendChild(slot);
+    startToolAmbience(toolId);
+  });
+}
+
+function stopGearBar() {
+  gearActive = false;
+  gearTimers.forEach(t => clearTimeout(t));
+  gearTimers = [];
+  document.getElementById('gear-bar').classList.remove('active');
+  document.getElementById('gear-bar').innerHTML = '';
+  document.body.classList.remove('gear-active');
+  // stop looping sounds
+  ['mel','boobuddy','rempod','spiritbox'].forEach(s => stopSound(s));
+}
+
+function scheduleGear(fn, minMs, maxMs, toolId) {
+  if (!gearActive) return;
+  if (toolId && pausedTools.has(toolId)) return;
+  const delay = minMs + Math.random() * (maxMs - minMs);
+  const t = setTimeout(() => {
+    if (!gearActive) return;
+    if (toolId && pausedTools.has(toolId)) return;
+    fn();
+    scheduleGear(fn, minMs, maxMs, toolId);
+  }, delay);
+  gearTimers.push(t);
+}
+
+function startToolAmbience(toolId) {
+  if (toolId === 'mel') {
+    // Animate the EMF bar randomly
+    scheduleGear(() => {
+      const fill = document.getElementById('mel-fill');
+      const reading = document.getElementById('gear-reading-mel');
+      const slot = document.getElementById('gear-slot-mel');
+      if (!fill || !gearToolState.mel) return;
+      const spike = Math.random() > 0.5;
+      const pct = spike ? 40 + Math.random() * 55 : 5 + Math.random() * 20;
+      fill.style.width = pct + '%';
+      fill.className = 'mel-bar-fill' + (pct > 70 ? ' danger' : '');
+      if (reading) reading.textContent = (58 + (Math.random() * 8 - 4) - (spike ? 14 : 0)).toFixed(1) + '°F';
+      if (slot) slot.classList.add('pulsing');
+      if (spike) playSound(Math.random() > 0.5 ? 'mel' : 'mel2', 0.5);
+      setTimeout(() => { if (slot) slot.classList.remove('pulsing'); fill.style.width = '0%'; }, 2500);
+    }, 7000, 16000, 'mel');
+
+  } else if (toolId === 'rempod') {
+    const colors = ['on-blue','on-green','on-yellow','on-red'];
+    scheduleGear(() => {
+      const lights = [0,1,2,3].map(i => document.getElementById('rem-' + i));
+      if (!lights[0] || !gearToolState.rempod) return;
+      const count = 1 + Math.floor(Math.random() * 4);
+      const slot = document.getElementById('gear-slot-rempod');
+      if (slot) slot.classList.add('alerting');
+      if (gearToolState.rempod) playSound('rempod', 0.5);
+      lights.forEach((l, i) => {
+        if (l) l.className = 'rem-light ' + (i < count ? colors[i] : '');
+      });
+      setTimeout(() => {
+        lights.forEach(l => { if (l) l.className = 'rem-light'; });
+        if (slot) slot.classList.remove('alerting');
+      }, 1800);
+    }, 9000, 22000, 'rempod');
+
+  } else if (toolId === 'spiritbox') {
+    // Scan noise, occasionally a word
+    scheduleGear(() => {
+      const disp = document.getElementById('spirit-display');
+      if (!disp || !gearToolState.spiritbox) return;
+      const slot = document.getElementById('gear-slot-spiritbox');
+      if (gearToolState.spiritbox) playSound('spiritbox', 0.4);
+      // FM frequency scan — numbers only, no word breakthrough
+      let ticks = 0;
+      const scan = setInterval(() => {
+        if (!disp) { clearInterval(scan); return; }
+        disp.textContent = Math.random() > 0.4
+          ? (88 + Math.random() * 20).toFixed(1) + ' FM'
+          : '· · ·';
+        disp.className = 'spirit-scan';
+        ticks++;
+        if (ticks > 10) {
+          clearInterval(scan);
+          disp.textContent = '· · ·';
+        }
+      }, 110);
+    }, 5000, 13000, 'spiritbox');
+
+  } else if (toolId === 'boobuddy') {
+    scheduleGear(() => {
+      const slot = document.getElementById('gear-slot-boobuddy');
+      const reading = document.getElementById('gear-reading-boobuddy');
+      const bbSounds = ['boobuddy','boobuddy2','boobuddy3','boobuddy4'];
+      playSound(bbSounds[Math.floor(Math.random() * bbSounds.length)], 0.6);
+      if (slot) slot.classList.add('pulsing');
+      if (reading) reading.textContent = 'ACTIVE';
+      setTimeout(() => {
+        if (slot) slot.classList.remove('pulsing');
+        if (reading) reading.textContent = ' ';
+      }, 3000);
+    }, 12000, 28000, 'boobuddy');
+
+  } else if (toolId === 'ovilus') {
+    scheduleGear(() => {
+      const disp = document.getElementById('ovilus-display');
+      if (!disp) return;
+      const slot = document.getElementById('gear-slot-ovilus');
+      const word = randomOvilusWord(true);
+      disp.textContent = word;
+      if (slot) slot.classList.add('pulsing');
+      setTimeout(() => {
+        if (disp) disp.textContent = '···';
+        if (slot) slot.classList.remove('pulsing');
+      }, 3000);
+    }, 8000, 20000, 'ovilus');
+
+  } else if (toolId === 'catballs') {
+    scheduleGear(() => {
+      const slot = document.getElementById('gear-slot-catballs');
+      const reading = document.getElementById('gear-reading-catballs');
+      if (slot) { slot.classList.add('alerting'); }
+      if (reading) reading.textContent = '● ●';
+      setTimeout(() => {
+        if (slot) slot.classList.remove('alerting');
+        if (reading) reading.textContent = ' ';
+      }, 1200);
+    }, 10000, 25000, 'catballs');
+
+  } else if (toolId === 'sensor360') {
+    scheduleGear(() => {
+      const slot = document.getElementById('gear-slot-sensor360');
+      const reading = document.getElementById('gear-reading-sensor360');
+      if (reading) reading.textContent = '🌈';
+      if (slot) slot.classList.add('pulsing');
+      setTimeout(() => {
+        if (reading) reading.textContent = ' ';
+        if (slot) slot.classList.remove('pulsing');
+      }, 1500);
+    }, 11000, 24000, 'sensor360');
+
+  } else if (toolId === 'laser') {
+    scheduleGear(() => {
+      const slot = document.getElementById('gear-slot-laser');
+      const reading = document.getElementById('gear-reading-laser');
+      if (reading) reading.textContent = 'BREAK';
+      if (slot) slot.classList.add('alerting');
+      setTimeout(() => {
+        if (reading) reading.textContent = ' ';
+        if (slot) slot.classList.remove('alerting');
+      }, 1000);
+    }, 14000, 30000, 'laser');
+  }
+  // Passive tools (camera4k, evp, flir, sls) — no ambience ticker, just show in bar
+}
+
+// ════════════════════════════════════════════════════════════
+// GEAR TOOL TOGGLES
+// ════════════════════════════════════════════════════════════
+const gearToolState = { mel: true, rempod: true, spiritbox: true };
+
+function toggleGearTool(toolId) {
+  gearToolState[toolId] = !gearToolState[toolId];
+  const btn = document.getElementById('toggle-' + toolId);
+  const slot = document.getElementById('gear-slot-' + toolId);
+  const on = gearToolState[toolId];
+  if (btn) { btn.textContent = on ? 'ON' : 'OFF'; btn.classList.toggle('off', !on); }
+  if (slot) { slot.style.opacity = on ? '1' : '0.4'; }
+  if (!on) {
+    // silence immediately
+    stopSound(toolId === 'mel' ? 'mel' : toolId === 'rempod' ? 'rempod' : 'spiritbox');
+    if (toolId === 'mel') {
+      const fill = document.getElementById('mel-fill');
+      if (fill) fill.style.width = '0%';
+      const r = document.getElementById('gear-reading-mel');
+      if (r) r.textContent = 'OFF';
+    }
+    if (toolId === 'spiritbox') {
+      const d = document.getElementById('spirit-display');
+      if (d) { d.textContent = '···'; d.className = 'spirit-scan'; }
+    }
+    if (toolId === 'rempod') {
+      [0,1,2,3].forEach(i => { const l = document.getElementById('rem-'+i); if(l) l.className='rem-light'; });
+    }
+  }
+}
+
+// Wrap scheduleGear calls to respect toggle state
+const _origScheduleGear = scheduleGear;
+
+// ════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════
+const visited = new Set([0]);
+const sceneDepths = {
+  'scene-0': 0,
+  'scene-crew-drive': 1, 'scene-alone-drive': 1, 'scene-one-more-first': 1,
+  'scene-tell-crew': 2, 'scene-keep-secret': 2, 'scene-alone-crash': 2, 'scene-turn-around': 2,
+  'scene-became-gh': 3, 'scene-coincidence': 3, 'scene-make-up': 3,
+  'scene-night-prep': 4, 'scene-daytime-sweep': 4,
+  'scene-final-night': 5, 'scene-final-end': 5,
+};
+
+function goTo(id) {
+  // Stop one-shot atmospheric sounds when navigating away
+  ['wind','rocking','creak','knock','scream','ghost','demon','glass','thud'].forEach(s => stopSound(s));
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  const next = document.getElementById(id);
+  if (!next) { console.error('Missing scene:', id); return; }
+  next.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Progress dots
+  const depth = sceneDepths[id] ?? -1;
+  if (depth >= 0) {
+    visited.add(depth);
+    updateDots(depth);
+  }
+  // Trigger fade blocks in the new scene
+  setTimeout(() => {
+    next.querySelectorAll('.fade-block').forEach((el, i) => {
+      setTimeout(() => el.classList.add('revealed'), i * 350);
+    });
+  }, 100);
+  // Special triggers
+  if (id === 'scene-check-recording') triggerRecordingReveal();
+}
+
+function updateDots(current) {
+  for (let i = 0; i <= 4; i++) {
+    const dot = document.getElementById('dot-' + i);
+    if (!dot) continue;
+    dot.className = 'progress-dot';
+    if (i < current) dot.classList.add('visited');
+    else if (i === current) dot.classList.add('current');
+  }
+}
+
+function restart() {
+  visited.clear();
+  visited.add(0);
+  // Splice in-place to preserve array references held by tool grid buttons
+  state.selectedTools.splice(0, state.selectedTools.length);
+  state.finalTools.splice(0, state.finalTools.length);
+  state.huntCase = null;
+  state.huntCount = 0;
+  updateDots(0);
+  // Rebuild the final tool grid fresh so buttons re-close over the cleared array
+  buildToolGrid('final-tool-grid', 'final-tool-count', 'final-enter-btn', state.finalTools);
+  document.getElementById('final-tool-count').textContent = '0';
+  document.getElementById('final-enter-btn').disabled = true;
+  goTo('scene-0');
+  runOpeningSequence();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ════════════════════════════════════════════════════════════
+// RECORDING REVEAL ANIMATION
+// ════════════════════════════════════════════════════════════
+function triggerRecordingReveal() {
+  setTimeout(() => {
+    playSound('evp-yes', 0.75);
+    document.getElementById('evp-reveal').style.opacity = '1';
+    triggerFlicker();
+  }, 2000);
+  setTimeout(() => {
+    playSound('evp-yes', 0.75);
+    document.getElementById('evp-reveal2').style.opacity = '1';
+    triggerFlicker();
+    triggerShake();
+  }, 4800);
+  setTimeout(() => {
+    document.getElementById('evp-drop').style.opacity = '1';
+  }, 5500);
+  setTimeout(() => {
+    document.getElementById('evp-contact').style.opacity = '1';
+    document.getElementById('recording-choice').style.display = 'block';
+  }, 6500);
+}
+
+function triggerFlicker() {
+  document.body.classList.add('flickering');
+  setTimeout(() => document.body.classList.remove('flickering'), 700);
+}
+
+function triggerShake() {
+  document.getElementById('game-wrap').classList.add('shaking');
+  setTimeout(() => document.getElementById('game-wrap').classList.remove('shaking'), 600);
+}
+
+// ════════════════════════════════════════════════════════════
+// HUNT SYSTEM
+// ════════════════════════════════════════════════════════════
+function pickHuntCase() {
+  const available = HUNT_CASES.filter(c => c.id !== state.huntCase?.id);
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+function buildToolGrid(gridId, countId, enterBtnId, toolsArray) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  TOOLS.forEach(tool => {
+    const btn = document.createElement('button');
+    btn.className = 'tool-btn';
+    btn.id = gridId + '-' + tool.id;
+    btn.innerHTML = `<span class="tool-icon">${tool.icon}</span>${tool.name}<br><span style="color:var(--text-dim); font-size:0.65rem">${tool.desc}</span>`;
+    btn.onclick = () => toggleTool(tool.id, gridId, countId, enterBtnId, toolsArray);
+    grid.appendChild(btn);
+  });
+}
+
+function toggleTool(id, gridId, countId, enterBtnId, toolsArray) {
+  const idx = toolsArray.indexOf(id);
+  const btn = document.getElementById(gridId + '-' + id);
+  if (idx >= 0) {
+    toolsArray.splice(idx, 1);
+    btn.classList.remove('selected');
+  } else {
+    if (toolsArray.length >= 3) return;
+    toolsArray.push(id);
+    btn.classList.add('selected');
+  }
+  document.getElementById(countId).textContent = toolsArray.length;
+  document.getElementById(enterBtnId).disabled = toolsArray.length < 3;
+}
+
+function startOneMoreHunt(phase) {
+  state.huntCase = pickHuntCase();
+  // Assign a random haunted house image for this case
+  state.huntCase._houseImg = HOUSE_IMAGES[state.huntCase.id] || 'hh7.jpg';
+  state.selectedTools.splice(0, state.selectedTools.length);
+  buildToolGrid('tool-grid', 'tool-count', 'enter-btn', state.selectedTools);
+  document.getElementById('tool-count').textContent = '0';
+  document.getElementById('enter-btn').disabled = true;
+  document.getElementById('hunt-label').innerHTML = state.huntCase.label;
+  const img = document.getElementById('hunt-house-img');
+  if (img) {
+    img.src = BASE_URL + state.huntCase._houseImg;
+    img.style.display = 'block';
+    if (state.huntCase.id !== 'voices' && state.huntCase.id !== 'feeling') {
+      playSound('wind', 0.3);
+    }
+  }
+  document.getElementById('hunt-intro-text').innerHTML = `<p>${state.huntCase.subtitle}</p>`;
+  goTo('scene-hunt');
+}
+
+function enterHouse() {
+  goTo('scene-hunt-night');
+  document.getElementById('night-label').textContent = 'Inside the House';
+  document.getElementById('night-intro-text').innerHTML = state.huntCase.midText;
+  startGearBar(state.selectedTools);
+  if (state.huntCase.id === 'feeling') {
+    setTimeout(() => playSound('creak', 0.5), 1800);
+  } else if (state.huntCase.id === 'voices') {
+    setTimeout(() => playSound('laugh', 0.65), 1200);
+  } else {
+    playSound('wind', 0.35);
+  }
+}
+
+// showMidNight removed — toolbar handles mid-night feedback
+
+function showLateNight() {
+  goTo('scene-hunt-late');
+  document.getElementById('late-night-text').innerHTML = state.huntCase.lateText;
+  const id = state.huntCase.id;
+  if (id === 'rocking')  setTimeout(() => playSound('rocking', 0.7), 1500);
+  if (id === 'shadow')   setTimeout(() => playSound('knock',   0.7), 2000);
+  if (id === 'orbs')     setTimeout(() => playSound('creak',   0.6), 2000);
+  if (id === 'evil')   { setTimeout(() => playSound('knock',   0.8),  800);
+                         setTimeout(() => playSound('glass',   0.75), 2400); }
+  if (id === 'voices')   setTimeout(() => playSound('creak',   0.6), 2000);
+  if (id === 'feeling')  setTimeout(() => playSound('thud', 0.8), 1800);
+}
+
+function showEndNight() {
+  stopGearBar();
+  goTo('scene-hunt-end');
+  const entities = state.huntCase.entity;
+  const tools = state.selectedTools;
+  document.getElementById('end-evidence-panel').innerHTML = buildEvidencePanel(tools, entities, true, state.huntCase);
+  const grid = document.getElementById('conclusion-grid');
+  grid.innerHTML = '';
+  state.huntCase.conclusions.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'conclusion-btn';
+    btn.textContent = c;
+    btn.onclick = () => wrapUpHunt();
+    grid.appendChild(btn);
+  });
+}
+
+function wrapUpHunt() {
+  state.huntCount++;
+  const txt = document.getElementById('hunt-done-text');
+  txt.innerHTML = `<p>Case filed. Client notified. Another night in the books.</p><p>That's great and all—but this is really all about Ryan.</p><p><em>Is it time yet?</em></p>`;
+  const oneMoreBtn = document.getElementById('one-more-btn');
+  oneMoreBtn.style.display = 'block';
+  goTo('scene-hunt-done');
+}
+
+function buildEvidencePanel(tools, entities, isFull, huntCase) {
+  const anyTriggered = tools.some(toolId => entities.some(e => ENTITY_TRIGGERS[e]?.includes(toolId)));
+  let html = `<div class="evidence-panel"><div class="evidence-panel-title">${isFull ? 'Full Night' : 'Mid-Night'} Evidence</div>`;
+  tools.forEach(toolId => {
+    const tool = TOOLS.find(t => t.id === toolId);
+    if (!tool) return;
+    const triggered = entities.some(e => ENTITY_TRIGGERS[e]?.includes(toolId));
+    html += `<div class="evidence-item">
+      <span class="evidence-icon">${tool.icon}</span>
+      <div>
+        <span class="evidence-label">${tool.name}</span>
+        <span class="evidence-result ${triggered ? 'confirmed' : 'negative'}">
+          ${triggered ? getEvidenceResult(toolId, entities, isFull) : getPassiveReading(toolId)}
+        </span>
+      </div>
+    </div>`;
+  });
+  if (!anyTriggered) {
+    html += `<div style="margin-top:1rem; padding-top:1rem; border-top: 1px solid var(--border); font-family:'Inconsolata',monospace; font-size:0.8rem; color:var(--text-muted); font-style:italic;">${isFull ? 'Nothing confirmed tonight. The house keeps its secrets.' : 'Nothing significant yet—keep watching.'}</div>`;
+  }
+  html += `</div>`;
+
+  // Evidence images and sounds — only on full end-of-night and only if 4K camera triggered
+  if (isFull && huntCase) {
+    const caseId = huntCase.id;
+    const imgFile = CASE_IMAGES[caseId];
+    const has4K = tools.includes('camera4k') && entities.some(e => ENTITY_TRIGGERS[e]?.includes('camera4k'));
+    const hasEVP = tools.includes('evp') && entities.some(e => ENTITY_TRIGGERS[e]?.includes('evp'));
+
+    if (has4K && imgFile) {
+      setTimeout(() => playSound('click', 0.6), 400);
+      html += `<div class="evidence-image-label">📷 4K Camera Capture</div>
+               <img src="${BASE_URL}${imgFile}" class="evidence-image" alt="Evidence photo" onload="this.style.opacity=1" style="opacity:0; transition:opacity 1.2s ease;">`;
+    }
+    // SLS non-BB image
+    const hasSLS = tools.includes('sls') && entities.some(e => ENTITY_TRIGGERS[e]?.includes('sls'));
+    const slsImg = CASE_SLS_IMAGES[caseId];
+    if (hasSLS && slsImg) {
+      setTimeout(() => playSound('click', 0.6), 700);
+      html += `<div class="evidence-image-label">🖼️ SLS Camera Capture</div>
+               <img src="${BASE_URL}${slsImg}" class="evidence-image" alt="SLS figure" onload="this.style.opacity=1" style="opacity:0; transition:opacity 1.2s ease;">`;
+    }
+    if (hasEVP && caseId === 'voices') {
+      setTimeout(() => playSound('ghost', 0.6), 800);
+    }
+    if (hasEVP && entities.includes('demon')) {
+      setTimeout(() => playSound('demon', 0.7), 800);
+    }
+  }
+  return html;
+}
+
+function getEvidenceResult(toolId, entities, full) {
+  const hasHuman = entities.includes('human_ghost');
+  const hasDemon = entities.includes('demon');
+  const hasShadow = entities.includes('shadow_person');
+  const hasResidual = entities.includes('residual');
+  const hasOrbs = entities.includes('orbs');
+  const hasPolt = entities.includes('poltergeist');
+  const hasObject = entities.includes('haunted_object');
+  const hasCold = entities.includes('cold_spots');
+  const map = {
+    camera4k: hasShadow ? 'Dark shadow figure in the hall' : hasOrbs ? 'Orb captured in the living room' : hasResidual ? 'Faint figure of a woman in the room' : hasDemon ? 'If you squint you can almost see something you don\'t want to see' : hasObject ? 'Camera caught light spectrum around object' : 'White fog—possible human form',
+    mel: hasCold ? 'Temperature drop: 14°F—cold spot confirmed' : hasPolt ? 'Erratic EMF fluctuation' : hasObject ? 'Localized spike near object' : 'Sustained EMF elevation',
+    evp: hasDemon ? 'Low growling: "Get out"' : hasHuman ? 'Clear voice: "I\'m still here"' : 'Faint vocal anomaly detected',
+    spiritbox: hasDemon ? '"Leave... now..." through static' : hasHuman ? 'Name spoken through static' : 'Partial words through scan',
+    boobuddy: hasDemon ? 'Activated—you heard what it said' : hasShadow ? 'Activated unprompted in the hall' : 'Activated—you heard what it said',
+    laser: hasShadow ? 'Grid disturbance—large mass crossing' : hasOrbs ? 'Multiple small interruptions' : 'Single pass detected',
+    sensor360: hasDemon ? 'Rapid multi-color flash—high intensity' : hasHuman ? 'Slow steady flash—low threat' : 'Multiple activations',
+    flir: hasObject ? 'Localized heat anomaly on object' : hasCold ? 'Cold mass—human silhouette shape' : hasDemon ? 'Thermal spike: unexplained heat source' : 'Cold zone documented',
+    catballs: hasDemon ? 'Constant activation—agitated pattern' : hasShadow ? 'Activated when nothing visible' : 'Periodic lighting',
+    sls: hasDemon ? 'Large distorted stick figure—non-human proportions' : hasShadow ? 'Towering figure detected' : 'Human-sized figure mapped',
+    rempod: full ? 'Sustained field disruption throughout night' : 'Electromagnetic field disturbance',
+    ovilus: 'Words detected: ' + getOvilus(entities),
+  };
+  return map[toolId] || 'Activity confirmed';
+}
+
+function getOvilus(entities) {
+  const words = ['here', 'help', 'room', 'dark', 'angry'];
+  if (entities.includes('demon')) words.push('murder', 'devil');
+  if (entities.includes('human_ghost')) words.push('name', 'dead', 'I');
+  if (entities.includes('shadow_person')) words.push('shadow', 'run');
+  return words.slice(0, 4).join(', ');
+}
+
+function getPassiveReading(toolId) {
+  const passive = {
+    camera4k:  'Nothing captured',
+    mel:       'Sporadic activity—nothing conclusive',
+    evp:       'Background noise only',
+    spiritbox: 'A voice came through, but you cannot tell what was said',
+    boobuddy:  'Active, but not conclusive',
+    laser:     'Line break detected',
+    sensor360: 'Active, but not conclusive',
+    flir:      'Ambient temperature only—no anomalies',
+    catballs:  'Lights, but no movement',
+    sls:       'No figures mapped',
+    rempod:    'Sporadic activity—nothing conclusive',
+    ovilus:    'Active, but not conclusive',
+  };
+  return passive[toolId] || 'No readings detected';
+}
+
+// ════════════════════════════════════════════════════════════
+// FINAL INVESTIGATION
+// ════════════════════════════════════════════════════════════
+function showFinalLateNight() {
+  goTo('scene-final-late');
+  // Reset animated elements
+  ['scream-text','kitchen-text','tap-text','ryan-text','ryan-q','run-text','voice-text'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '0';
+  });
+  document.getElementById('final-continue-btn').style.display = 'none';
+  // Animated reveal with scream
+  setTimeout(() => { triggerFlicker(); playSound('scream', 0.8); document.getElementById('scream-text').style.opacity = '1'; }, 2000);
+  setTimeout(() => { document.getElementById('kitchen-text').style.opacity = '1'; }, 3500);
+  setTimeout(() => { document.getElementById('tap-text').style.opacity = '1'; }, 5000);
+  setTimeout(() => { triggerFlicker(); document.getElementById('ryan-text').style.opacity = '1'; }, 6500);
+  setTimeout(() => { triggerShake(); document.getElementById('ryan-q').style.opacity = '1'; }, 8000);
+  setTimeout(() => { triggerFlicker(); triggerFlicker(); document.getElementById('run-text').style.opacity = '1'; }, 9500);
+  setTimeout(() => { document.getElementById('voice-text').style.opacity = '1'; document.getElementById('final-continue-btn').style.display = 'block'; }, 11000);
+}
+
+function enterFinalHouse() {
+  startGearBar(state.finalTools);
+  playSound('wind', 0.35);
+  goTo('scene-final-night');
+  // Animate final mid-night dramatically
+  setTimeout(() => {
+    triggerFlicker();
+    document.getElementById('scream-text').style.opacity = '1';
+  }, 3000);
+  setTimeout(() => {
+    document.getElementById('kitchen-text').style.opacity = '1';
+  }, 4500);
+  setTimeout(() => {
+    document.getElementById('tap-text').style.opacity = '1';
+  }, 6000);
+  setTimeout(() => {
+    triggerFlicker();
+    document.getElementById('ryan-text').style.opacity = '1';
+  }, 8000);
+  setTimeout(() => {
+    triggerShake();
+    document.getElementById('ryan-q').style.opacity = '1';
+  }, 9500);
+  setTimeout(() => {
+    triggerFlicker(); triggerFlicker();
+    document.getElementById('run-text').style.opacity = '1';
+  }, 11000);
+  setTimeout(() => {
+    document.getElementById('voice-text').style.opacity = '1';
+    document.getElementById('final-continue-btn').style.display = 'block';
+  }, 12500);
+}
+
+// showFinalMidNight removed — dramatic sequence runs directly in enterFinalHouse
+
+function showFinalEndNight() {
+  stopGearBar();
+  goTo('scene-final-end');
+  const tools = state.finalTools;
+  let html = '<div class="evidence-panel"><div class="evidence-panel-title">Final Evidence—Bed &amp; Breakfast</div>';
+  tools.forEach(toolId => {
+    const tool = TOOLS.find(t => t.id === toolId);
+    const finalResults = {
+      camera4k: { found: true, text: 'Image captured: a demon-like figure in the kitchen doorway' },
+      evp: { found: true, text: '"I\'m here and I\'m not alone—help me."' },
+      flir: { found: true, text: 'Cold silhouette of a man—human male' },
+      sls: { found: true, text: 'Two stick figures: one human-sized, one hulking and distorted' },
+    };
+    const result = finalResults[toolId];
+    html += `<div class="evidence-item">
+      <span class="evidence-icon">${tool.icon}</span>
+      <div>
+        <span class="evidence-label">${tool.name}</span>
+        <span class="evidence-result ${result ? 'confirmed' : 'negative'}">
+          ${result ? result.text : getPassiveReading(toolId)}
+        </span>
+      </div>
+    </div>`;
+  });
+  html += `<div class="evidence-item" style="margin-top:0.75rem; padding-top:0.75rem; border-top: 1px solid var(--border);">
+    <span class="evidence-icon">🦶</span>
+    <div>
+      <span class="evidence-label">Joey's Whereabouts</span>
+      <span class="evidence-result" style="color:var(--text-muted); font-style:italic;">He's fine. Stubbed his toe in the dark.</span>
+    </div>
+  </div></div>`;
+
+  // B&B-specific evidence images + sounds
+  const delay = { camera4k: 500, flir: 900, sls: 1300 };
+  const bbImages = { camera4k: 'demonpic.jpg', flir: 'FLIRimage.png', sls: 'SLS%20pic.jpg' };
+  const bbLabels = { camera4k: '📷 4K Camera Capture', flir: '🌡️ FLIR Thermal Image', sls: '🖼️ SLS Camera Capture' };
+  tools.forEach(toolId => {
+    if (bbImages[toolId]) {
+      html += `<div class="evidence-image-label">${bbLabels[toolId]}</div>
+               <img src="${BASE_URL}${bbImages[toolId]}" class="evidence-image" alt="B&B evidence"
+                    onload="this.style.opacity=1" style="opacity:0; transition:opacity 1.5s ease;">`;
+      setTimeout(() => playSound('click', 0.6), delay[toolId] || 500);
+    }
+  });
+  if (tools.includes('evp')) {
+    setTimeout(() => playSound('evp-help', 0.8), 1800);
+  }
+
+  document.getElementById('final-end-panel').innerHTML = html;
+
+  // Tailor the teaser based on what they found
+  const foundRyan = tools.some(t => ['evp', 'flir', 'sls'].includes(t));
+  const foundDemon = tools.some(t => ['camera4k', 'sls'].includes(t));
+  if (foundRyan && foundDemon) {
+    document.getElementById('final-headline').textContent = 'He\'s Here. And He\'s Not Alone.';
+    document.getElementById('final-body').textContent = 'You made contact. But something else is in that house—and it doesn\'t want to let Ryan go. The full story is coming soon.';
+  } else if (foundRyan) {
+    document.getElementById('final-headline').textContent = 'You Found Him.';
+    document.getElementById('final-body').textContent = 'Contact made. Ryan is still there. But what happens next changes everything. The full story is coming soon.';
+  } else {
+    document.getElementById('final-headline').textContent = 'Something Is In That House.';
+    document.getElementById('final-body').textContent = 'You didn\'t find him. Not tonight. But you know he\'s there. The full story—and what it takes to bring him home—is coming soon.';
+  }
+}
+
+// Build final tool grid
+buildToolGrid('final-tool-grid', 'final-tool-count', 'final-enter-btn', state.finalTools);
+
+// ════════════════════════════════════════════════════════════
+// OPENING SEQUENCE—line-by-line timed reveal
+// Adjust delays here to sync with future audio cues
+// ════════════════════════════════════════════════════════════
+function runOpeningSequence() {
+  // [element-id, delay_ms]
+  const beats = [
+    ['opening-label', 300],   // "Two Years Ago" label
+    ['op-0',  1200],           // "Two years ago your husband Ryan..."
+    ['op-1',  2800],           // "He tried to stop an armed robbery..."
+    ['op-2',  4600],           // "He ended up one of three dead..."
+    ['op-3',  6200],           // "The armed man got away."
+    ['op-4',  8500],           //—One Year Ago —
+    ['op-5',  9400],           // "Your best friend Julie..."
+    ['op-6', 10800],           // "She'd stayed at that same B&B..."
+    ['op-7', 12300],           // "She felt Ryan's presence..."
+    ['op-8', 14800],           //—Six Months Ago —
+    ['op-9', 15700],           // "You joined I-55 Paranormal..."
+    ['op-10',17000],           // "To see if there was any proof..."
+    ['op-11',19500],           // "There are."
+  ];
+
+  beats.forEach(([id, delay]) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) el.style.opacity = '1';
+    }, delay);
+  });
+
+  setTimeout(() => {
+    document.getElementById('opening-choices').style.display = 'block';
+  }, 21500);
+}
+
+runOpeningSequence();
+</script>
+
+<!-- ── GEAR BAR ── -->
+<div id="gear-bar"></div>
+
+
+<!-- ── AUDIO ── -->
+<audio id="snd-wind"    src="https://outsideoftime2.github.io/Station-Press-Arcade/wind.mp3"                   preload="auto"></audio>
+<audio id="snd-evp-yes" src="https://outsideoftime2.github.io/Station-Press-Arcade/EVP%20yes.mp3"                preload="auto"></audio>
+<audio id="snd-evp-help" src="https://outsideoftime2.github.io/Station-Press-Arcade/evp-help.mp3"              preload="auto"></audio>
+<audio id="snd-mel"     src="https://outsideoftime2.github.io/Station-Press-Arcade/MEL.mp3"                    preload="auto"></audio>
+<audio id="snd-boobuddy" src="https://outsideoftime2.github.io/Station-Press-Arcade/boobuddy.mp3"              preload="auto"></audio>
+<audio id="snd-rempod"  src="https://outsideoftime2.github.io/Station-Press-Arcade/rempod.mp3"                 preload="auto"></audio>
+<audio id="snd-spiritbox" src="https://outsideoftime2.github.io/Station-Press-Arcade/Spirit%20box.mp3"           preload="auto"></audio>
+<audio id="snd-rocking" src="https://outsideoftime2.github.io/Station-Press-Arcade/Rocking%20Chair.mp3"          preload="auto"></audio>
+<audio id="snd-creak"   src="https://outsideoftime2.github.io/Station-Press-Arcade/creaky%20floor%20footsteps.mp3" preload="auto"></audio>
+<audio id="snd-knock"   src="https://outsideoftime2.github.io/Station-Press-Arcade/knocking.mp3"               preload="auto"></audio>
+<audio id="snd-scream"  src="https://outsideoftime2.github.io/Station-Press-Arcade/male%20scream.wav"            preload="auto"></audio>
+<audio id="snd-demon"   src="https://outsideoftime2.github.io/Station-Press-Arcade/demon.mp3"                  preload="auto"></audio>
+<audio id="snd-ghost"   src="https://outsideoftime2.github.io/Station-Press-Arcade/ghost%20sound.mp3"            preload="auto"></audio>
+<audio id="snd-click"      src="https://outsideoftime2.github.io/Station-Press-Arcade/photoclick.mp3"             preload="auto"></audio>
+<audio id="snd-boobuddy2"  src="https://outsideoftime2.github.io/Station-Press-Arcade/BooBuddyCOLD.mp3"            preload="auto"></audio>
+<audio id="snd-boobuddy3"  src="https://outsideoftime2.github.io/Station-Press-Arcade/BooBuddyNOISE.mp3"           preload="auto"></audio>
+<audio id="snd-boobuddy4"  src="https://outsideoftime2.github.io/Station-Press-Arcade/BooBuddyABC.mp3"             preload="auto"></audio>
+<audio id="snd-mel2"       src="https://outsideoftime2.github.io/Station-Press-Arcade/MEL2.mp3"                    preload="auto"></audio>
+<audio id="snd-laugh"      src="https://outsideoftime2.github.io/Station-Press-Arcade/Laugh.mp3"                   preload="auto"></audio>
+<audio id="snd-thud"    src="https://outsideoftime2.github.io/Station-Press-Arcade/Thud.mp3"                   preload="auto"></audio>
+<audio id="snd-glass"   src="https://outsideoftime2.github.io/Station-Press-Arcade/Glass.wav"                  preload="auto"></audio>
+<audio id="snd-thud"    src="https://outsideoftime2.github.io/Station-Press-Arcade/Thud.mp3"                       preload="auto"></audio>
+<audio id="snd-glass"   src="https://outsideoftime2.github.io/Station-Press-Arcade/Glass.wav"                      preload="auto"></audio>
+
+</body>
+</html>
